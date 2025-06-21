@@ -1,0 +1,97 @@
+# Multi-Purpose AI Agent
+
+A PydanticAI-powered agent with a Gradio chat GUI that integrates multiple MCP servers for productivity tasks.
+
+## Features
+
+- **Note Management**: Obsidian vault integration for creating, reading, and searching notes
+- **Web Search**: Privacy-focused search through SearXNG
+- **Task Management**: Todoist integration for task CRUD operations
+- **Video Processing**: YouTube video summarization and transcript extraction
+- **Chat Interface**: Gradio-based GUI with streaming responses
+- **Configurable LLM**: Support for AWS Bedrock and OpenAI providers
+
+## Quick Start
+
+### 1. Setup Environment
+
+```bash
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### 2. Configure Environment Variables
+
+```bash
+cp .env.example .env
+# Edit .env with your API keys and configurations
+```
+
+### 3. Run the Application
+
+```bash
+# CLI interface
+python main.py
+
+# GUI interface
+python gui.py
+```
+
+## Configuration
+
+### LLM Providers
+
+- **AWS Bedrock** (preferred): Configure AWS credentials and region
+- **OpenAI**: Set API key for fallback option
+
+### MCP Servers
+
+1. **Obsidian**: Set `OBSIDIAN_VAULT_PATH` to your vault location
+2. **SearXNG**: Configure local SearXNG instance URL
+3. **Todoist**: Add your Todoist API token
+4. **YouTube**: Optional API key for enhanced features
+
+## Architecture
+
+```
+project/
+├── agent/          # PydanticAI agent implementation
+├── config/         # Configuration management
+├── mcp_servers/    # MCP server configurations
+├── tools/          # Tool wrappers for each service
+├── utils/          # Shared utilities
+├── tests/          # Unit tests
+├── main.py         # CLI entry point
+└── gui.py          # Gradio GUI
+```
+
+## Development
+
+### Testing
+
+```bash
+pytest tests/
+```
+
+### Code Formatting
+
+```bash
+black .
+```
+
+## MCP Servers
+
+This project integrates the following MCP servers:
+
+- [obsidian-mcp](https://github.com/StevenStavrakis/obsidian-mcp) - Note management
+- [mcp-searxng](https://github.com/ihor-sokoliuk/mcp-searxng) - Web search
+- [todoist-mcp-server](https://github.com/abhiz123/todoist-mcp-server) - Task management
+- [youtube-video-summarizer-mcp](https://github.com/nabid-pf/youtube-video-summarizer-mcp) - Video processing
+
+## License
+
+MIT License
