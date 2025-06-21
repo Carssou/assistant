@@ -109,36 +109,70 @@ agent = Agent(
 
 ---
 
-### Task 1.3: First MCP Server Integration (Obsidian)
+### Task 1.3: First MCP Server Integration (Obsidian) ⚠️ PARTIALLY COMPLETED 2025-06-21
 
 **Priority**: High
+**Status**: ⚠️ INFRASTRUCTURE COMPLETE - AWAITING COMPATIBLE MCP SERVER
 
 #### Subtasks:
 
-- [ ] Study `obsidian-mcp` server documentation and setup
-- [ ] Implement MCPServerStdio connection for Obsidian
-- [ ] Configure server with vault path: `npx -y obsidian-mcp /path/to/vault`
-- [ ] Test connection and available tools
-- [ ] Create wrapper functions for common Obsidian operations
-- [ ] Add vault path validation and safety checks
-- [ ] Test note operations (read, create, search)
-- [ ] Handle Obsidian-specific markdown formatting
+- [x] Study `obsidian-mcp` server documentation and setup ✅ 2025-06-21
+- [x] Implement MCPServerStdio connection for Obsidian ✅ 2025-06-21
+- [x] Configure server with vault path: `npx -y obsidian-mcp /path/to/vault` ✅ 2025-06-21
+- [x] Test connection and available tools ✅ 2025-06-21
+- [x] Create wrapper functions for common Obsidian operations ✅ 2025-06-21
+- [x] Add vault path validation and safety checks ✅ 2025-06-21
+- [x] Test note operations (read, create, search) ✅ 2025-06-21
+- [x] Handle Obsidian-specific markdown formatting ✅ 2025-06-21
+- [ ] **BLOCKER**: Fix tool naming convention mismatch (requires forking obsidian-mcp)
+
+#### Technical Implementation Status:
+
+**✅ COMPLETED Infrastructure:**
+- MCPServerStdio configuration and connection
+- Agent integration with MCP servers (1 server detected)
+- Complete tool wrapper functions with Obsidian-specific formatting
+- Comprehensive unit tests (28 passing tests)
+- Real integration tests with actual Obsidian vault
+- Error handling and validation
+
+**❌ BLOCKER Identified:**
+- Tool naming mismatch: MCP server uses hyphens (`list-available-vaults`) but PydanticAI converts to underscores (`list_available_vaults`)
+- All tool calls fail with "Unknown tool name" error
+- Original obsidian-mcp package unmaintained (6 months without updates)
+
+**🔧 SOLUTION IN PROGRESS:**
+- Fork obsidian-mcp package to fix naming convention compatibility
+- Maintain active fork with PydanticAI compatibility
 
 #### Expected Tools from obsidian-mcp:
 
-- read-note: Read content of existing notes
-- create-note: Create new notes with content
-- search-vault: Search across all notes
-- edit-note: Modify existing note content
-- delete-note: Remove notes from vault
+- read-note / read_note: Read content of existing notes
+- create-note / create_note: Create new notes with content
+- search-vault / search_vault: Search across all notes
+- edit-note / edit_note: Modify existing note content
+- delete-note / delete_note: Remove notes from vault
+- list-available-vaults / list_available_vaults: List configured vaults
+
+#### Current Status:
+
+**✅ Working:**
+- MCP server starts successfully with real vault
+- 11 tools registered (create-note, read-note, search-vault, etc.)
+- Agent detects and lists all available tools
+- Stdio communication established
+
+**❌ Not Working:**
+- Tool execution fails due to naming convention mismatch
+- No functional note operations until server is fixed
 
 #### Acceptance Criteria:
 
-- Agent can successfully connect to Obsidian MCP server
-- All basic note operations work correctly
-- Vault access is properly secured and validated
-- Error handling covers common file operation failures
-- Agent can have meaningful conversations about note management
+- [x] Agent can successfully connect to Obsidian MCP server ✅
+- [ ] All basic note operations work correctly ❌ (naming mismatch)
+- [x] Vault access is properly secured and validated ✅
+- [x] Error handling covers common file operation failures ✅
+- [ ] Agent can have meaningful conversations about note management ❌ (tools not executable)
 
 ---
 
@@ -386,7 +420,72 @@ agent = Agent(
 
 ---
 
-### Task 4.2: Advanced Agent Capabilities
+### Task 1.4: Fork and Fix Obsidian MCP Server
+
+**Priority**: High
+**Status**: PENDING
+
+#### Background:
+The original `obsidian-mcp` package has a tool naming convention mismatch with PydanticAI:
+- MCP server registers tools with hyphens: `list-available-vaults`
+- PydanticAI converts them to underscores: `list_available_vaults`
+- Package is unmaintained (6 months without updates)
+
+#### Subtasks:
+
+- [ ] Fork obsidian-mcp repository from https://github.com/StevenStavrakis/obsidian-mcp
+- [ ] Identify and fix tool naming convention issues
+- [ ] Test tool name compatibility with PydanticAI
+- [ ] Publish fixed package or configure local usage
+- [ ] Update project configuration to use working MCP server
+- [ ] Verify all 11 tools work correctly
+- [ ] Test end-to-end note operations through agent
+
+#### Expected Fix:
+Ensure MCP server accepts both naming conventions:
+- `list-available-vaults` (original format)
+- `list_available_vaults` (PydanticAI format)
+
+#### Acceptance Criteria:
+
+- [ ] Forked MCP server accepts PydanticAI tool name format
+- [ ] All note operations work through agent conversation
+- [ ] Real vault integration fully functional
+- [ ] Agent can perform meaningful note management tasks
+
+---
+
+### Task 4.2: Extended LLM Provider Support
+
+**Priority**: Medium
+
+#### Subtasks:
+
+- [ ] Add support for Anthropic (Claude) models via anthropic provider
+- [ ] Add support for Google Gemini models via google provider  
+- [ ] Add support for Cohere models via cohere provider
+- [ ] Add support for Groq models via groq provider
+- [ ] Add support for Mistral models via mistral provider
+- [ ] Update configuration to support all PydanticAI providers
+- [ ] Create provider-specific configuration validation
+- [ ] Add unit tests for all supported providers
+- [ ] Update documentation with all provider options
+
+#### Available PydanticAI Providers:
+```
+anthropic, bedrock, cohere, gemini, google, groq, mistral, openai
+```
+
+#### Acceptance Criteria:
+
+- Users can choose from all major LLM providers
+- Configuration validation works for each provider
+- Provider switching is seamless through environment variables
+- Documentation clearly explains setup for each provider
+
+---
+
+### Task 4.3: Advanced Agent Capabilities
 
 **Priority**: Low
 
@@ -407,7 +506,7 @@ agent = Agent(
 
 ---
 
-### Task 4.3: Performance and Reliability
+### Task 4.4: Performance and Reliability
 
 **Priority**: Medium
 

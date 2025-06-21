@@ -124,12 +124,15 @@ def create_model_instance(config: AgentConfig):
         return BedrockConverseModel(model_name=config.llm_choice)
             
     elif config.llm_provider == LLMProvider.OPENAI:
+        # Set OpenAI environment variables for the SDK
+        import os
+        if config.llm_api_key:
+            os.environ['OPENAI_API_KEY'] = config.llm_api_key
+        if config.llm_base_url:
+            os.environ['OPENAI_BASE_URL'] = config.llm_base_url
+            
         from pydantic_ai.models.openai import OpenAIModel
-        return OpenAIModel(
-            model_name=config.llm_choice,
-            api_key=config.llm_api_key,
-            base_url=config.llm_base_url
-        )
+        return OpenAIModel(model_name=config.llm_choice)
     else:
         raise ValueError(f"Unsupported LLM provider: {config.llm_provider}")
 

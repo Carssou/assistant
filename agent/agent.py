@@ -11,6 +11,7 @@ from pydantic_ai import Agent
 from agent.dependencies import AgentDependencies
 from agent.prompts import SYSTEM_PROMPT
 from config.settings import AgentConfig, create_model_instance
+from mcp_servers.configs import create_all_mcp_servers
 
 
 class ProductivityAgent:
@@ -35,15 +36,19 @@ class ProductivityAgent:
         # Create the model instance
         self.model = create_model_instance(self.config)
         
+        # Create MCP servers
+        self.mcp_servers = create_all_mcp_servers(self.config)
+        
         # Create the PydanticAI agent
         self.agent = Agent(
             model=self.model,
             deps_type=AgentDependencies,
             system_prompt=SYSTEM_PROMPT,
+            mcp_servers=self.mcp_servers,
             retries=2
         )
         
-        self.logger.info(f"Productivity agent initialized with {self.config.llm_provider} provider")
+        self.logger.info(f"Productivity agent initialized with {self.config.llm_provider} provider and {len(self.mcp_servers)} MCP servers")
     
     async def run_conversation(self, message: str) -> str:
         """
@@ -71,8 +76,14 @@ class ProductivityAgent:
             )
         
         try:
-            result = await self.agent.run(message, deps=self.deps)
-            response = result.data
+            # Run with MCP servers if available
+            if self.mcp_servers:
+                async with self.agent.run_mcp_servers():
+                    result = await self.agent.run(message, deps=self.deps)
+                    response = result.data
+            else:
+                result = await self.agent.run(message, deps=self.deps)
+                response = result.data
             
             # Log successful completion to Langfuse
             if generation:
@@ -118,10 +129,18 @@ class ProductivityAgent:
         
         response_chunks = []
         try:
-            async with self.agent.run_stream(message, deps=self.deps) as stream:
-                async for chunk in stream:
-                    response_chunks.append(str(chunk))
-                    yield chunk
+            # Run streaming with MCP servers if available
+            if self.mcp_servers:
+                async with self.agent.run_mcp_servers():
+                    async with self.agent.run_stream(message, deps=self.deps) as stream:
+                        async for chunk in stream:
+                            response_chunks.append(str(chunk))
+                            yield chunk
+            else:
+                async with self.agent.run_stream(message, deps=self.deps) as stream:
+                    async for chunk in stream:
+                        response_chunks.append(str(chunk))
+                        yield chunk
             
             # Log complete response to Langfuse
             if generation:
