@@ -16,6 +16,10 @@ A PydanticAI-powered agent with a Gradio chat GUI that integrates multiple MCP s
 ### 1. Setup Environment
 
 ```bash
+# Clone the repository
+git clone https://github.com/Carssou/assistant.git
+cd assistant
+
 # Create and activate virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -31,13 +35,23 @@ cp .env.example .env
 # Edit .env with your API keys and configurations
 ```
 
-### 3. Run the Application
+### 3. Test Configuration
 
 ```bash
-# CLI interface
+# Test configuration and model setup
+python main.py --config-test
+```
+
+### 4. Run the Application
+
+```bash
+# CLI interface (interactive mode)
 python main.py
 
-# GUI interface
+# Single query mode
+python main.py --query "Hello, can you introduce yourself?"
+
+# GUI interface (coming soon)
 python gui.py
 ```
 
@@ -74,13 +88,33 @@ project/
 ### Testing
 
 ```bash
+# Run all tests
 pytest tests/
+
+# Run specific test file
+pytest tests/test_config.py
+
+# Test with verbose output
+pytest tests/ -v
 ```
 
 ### Code Formatting
 
 ```bash
 black .
+```
+
+### Development Commands
+
+```bash
+# Test configuration
+python main.py --config-test
+
+# Interactive CLI
+python main.py
+
+# Single query test
+python main.py --query "test message"
 ```
 
 ## MCP Servers

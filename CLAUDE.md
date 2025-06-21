@@ -124,8 +124,17 @@ pip install -r requirements.txt
 
 ### Running
 ```bash
-python main.py  # CLI interface
-python gui.py   # Gradio GUI
+# Test configuration and model setup
+python main.py --config-test
+
+# Interactive CLI interface
+python main.py
+
+# Single query mode
+python main.py --query "Hello, test message"
+
+# Gradio GUI (future implementation)
+python gui.py
 ```
 
 ### Testing
