@@ -159,3 +159,6 @@ logs/
 # Local configuration
 config.local.py
 local_config.py
+
+# SearXNG auto-generated files
+searxng/uwsgi.ini
