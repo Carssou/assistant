@@ -9,7 +9,7 @@ from typing import Optional
 from pydantic_ai import Agent
 
 from agent.dependencies import AgentDependencies
-from agent.prompts import SYSTEM_PROMPT
+from agent.prompts import get_system_prompt
 from config.settings import AgentConfig, create_model_instance
 from mcp_servers.configs import create_all_mcp_servers
 
@@ -43,7 +43,7 @@ class ProductivityAgent:
         self.agent = Agent(
             model=self.model,
             deps_type=AgentDependencies,
-            system_prompt=SYSTEM_PROMPT,
+            system_prompt=get_system_prompt(),  # Get fresh date/time
             mcp_servers=self.mcp_servers,
             retries=2
         )

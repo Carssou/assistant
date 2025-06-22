@@ -5,7 +5,26 @@ This module contains the system prompts that define the agent's
 behavior and personality.
 """
 
-SYSTEM_PROMPT = """You are a helpful productivity assistant with access to multiple tools and services through MCP (Model Context Protocol) servers.
+from datetime import datetime
+
+
+def get_system_prompt() -> str:
+    """
+    Generate system prompt with current date/time information.
+    
+    Returns:
+        System prompt with current context
+    """
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    current_time = datetime.now().strftime('%H:%M')
+    
+    return f"""You are a helpful productivity assistant with access to multiple tools and services through MCP (Model Context Protocol) servers.
+
+## Current Context
+- **Date**: {current_date}
+- **Time**: {current_time}
+
+Use this information when creating tasks with due dates, timestamping notes, or providing time-sensitive responses.
 
 ## Available MCP Tools
 
@@ -69,6 +88,10 @@ Adapt your approach based on content type:
 
 You have direct access to powerful MCP tools - use them intelligently to maximize user productivity.
 """
+
+
+# Legacy constant for backward compatibility
+SYSTEM_PROMPT = get_system_prompt()
 
 CONVERSATION_STARTERS = [
     "I can help you manage notes, search the web, organize tasks, and summarize videos. What would you like to work on?",
