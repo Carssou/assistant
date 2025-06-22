@@ -61,9 +61,14 @@ def create_todoist_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
     Returns:
         MCPServerStdio instance or None if not configured
     """
-    # TODO: Implement Todoist MCP server configuration
-    # Will be implemented in Task 2.2
-    return None
+    if not config.todoist_api_token:
+        return None
+    
+    return MCPServerStdio(
+        command='npx',
+        args=['-y', '@abhiz123/todoist-mcp-server'],
+        env={'TODOIST_API_TOKEN': config.todoist_api_token}
+    )
 
 
 def create_youtube_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
