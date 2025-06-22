@@ -63,7 +63,7 @@ Based on the selected MCP servers:
 ```python
 # Planned MCP server configurations
 servers = [
-    MCPServerStdio('npx', args=['-y', 'obsidian-mcp', vault_path]),  # stdio
+    MCPServerStdio('npx', args=['-y', 'obsidian-mcp-pydanticai', vault_path]),  # stdio (fixed fork)
     MCPServerStdio('python', args=['searxng-mcp-server.py']),        # stdio
     MCPServerStdio('npx', args=['-y', '@abhiz123/todoist-mcp-server']),  # SSH (may rebuild)
     MCPServerStdio('python', args=['youtube-summarizer-mcp.py'])     # stdio
@@ -120,10 +120,11 @@ GUI_SHARE=false                             # Enable public sharing
 
 ### 1. Obsidian MCP Server
 
-- **Repository**: https://github.com/StevenStavrakis/obsidian-mcp
+- **Repository**: https://github.com/Carssou/obsidian-mcp-pydanticai (forked from StevenStavrakis/obsidian-mcp)
 - **Type**: stdio server (no installation needed)
-- **Configuration**: `npx -y obsidian-mcp /path/to/vault`
+- **Configuration**: `npx -y obsidian-mcp-pydanticai /path/to/vault`
 - **Expected Tools**: read-note, create-note, search-vault, edit-note, delete-note
+- **Note**: Fixed for PydanticAI naming convention compatibility
 
 ### 2. SearXNG MCP Server
 

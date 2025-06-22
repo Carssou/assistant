@@ -32,7 +32,7 @@ def create_obsidian_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
     
     return MCPServerStdio(
         command='npx',
-        args=['-y', 'obsidian-mcp', str(vault_path)]
+        args=['-y', 'obsidian-mcp-pydanticai', str(vault_path)]
     )
 
 
