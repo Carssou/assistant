@@ -108,7 +108,6 @@ project/
 ├── agent/          # PydanticAI agent implementation
 ├── config/         # Configuration management
 ├── mcp_servers/    # MCP server configurations
-├── tools/          # Tool wrappers for each service
 ├── utils/          # Shared utilities
 ├── tests/          # Unit tests
 ├── main.py         # CLI entry point
