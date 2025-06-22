@@ -1,0 +1,29 @@
+# SearXNG settings
+use_default_settings: true
+
+search:
+  # Enable JSON API format
+  formats:
+    - html
+    - json
+
+server:
+  # Allow requests from any host (for Docker)
+  bind_address: "0.0.0.0"
+  port: 8080
+  # Important: Enable JSON API access
+  limiter: false
+  # Set a proper secret key
+  secret_key: "your-secret-key-change-this-in-production-12345"
+  
+# Basic engine configuration  
+engines:
+  - name: google
+    engine: google
+    shortcut: g
+  - name: bing
+    engine: bing
+    shortcut: b
+  - name: duckduckgo
+    engine: duckduckgo
+    shortcut: ddg

@@ -46,9 +46,22 @@ def create_searxng_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
     Returns:
         MCPServerStdio instance or None if not configured
     """
-    # TODO: Implement SearXNG MCP server configuration
-    # Will be implemented in Task 2.1
-    return None
+    if not config.searxng_base_url:
+        return None
+    
+    env = {'SEARXNG_URL': config.searxng_base_url}
+    
+    # Add authentication if configured
+    if hasattr(config, 'searxng_username') and config.searxng_username:
+        env['AUTH_USERNAME'] = config.searxng_username
+    if hasattr(config, 'searxng_password') and config.searxng_password:
+        env['AUTH_PASSWORD'] = config.searxng_password
+    
+    return MCPServerStdio(
+        command='npx',
+        args=['-y', 'mcp-searxng'],
+        env=env
+    )
 
 
 def create_todoist_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:

@@ -170,34 +170,43 @@ agent = Agent(
 
 ## Phase 2: Multi-Server Integration
 
-### Task 2.1: Web Search Integration (SearXNG MCP) ⏸️ SKIPPED
+### Task 2.1: Web Search Integration (SearXNG MCP) ✅ COMPLETED 2025-06-22
 
-**Priority**: High
-**Status**: ⏸️ SKIPPED - SearXNG installation not feasible on macOS
+**Priority**: High  
+**Status**: ✅ COMPLETED
 
 #### Subtasks:
 
-- [ ] Set up SearXNG instance (if not already running)
-- [ ] Study `mcp-searxng` server setup and configuration
-- [ ] Integrate SearXNG MCP server as stdio process
-- [ ] Test search functionality and result formatting
-- [ ] Configure search parameters and result limits
-- [ ] Add error handling for search failures
-- [ ] Test privacy-focused search capabilities
+- [x] Set up SearXNG instance (Docker) ✅ 2025-06-22
+- [x] Study `mcp-searxng` server setup and configuration ✅ 2025-06-22
+- [x] Integrate SearXNG MCP server as stdio process ✅ 2025-06-22
+- [x] Test search functionality and result formatting ✅ 2025-06-22
+- [x] Configure search parameters and result limits ✅ 2025-06-22
+- [x] Add error handling for search failures ✅ 2025-06-22
+- [x] Test privacy-focused search capabilities ✅ 2025-06-22
 
-#### Expected Capabilities:
+#### Expected Tools:
 
-- Web search through SearXNG instance
-- Privacy-focused search without tracking
-- Structured search results with metadata
-- Integration with note creation for research
+- [x] searxng_web_search: Execute web searches with advanced filtering ✅
+- [x] web_url_read: Read and convert URL content to markdown ✅
+
+#### Implementation Notes:
+
+- ✅ Uses stdio MCP server with `npx -y mcp-searxng`
+- ✅ Requires SEARXNG_URL environment variable (http://localhost:8080)
+- ✅ Comprehensive search utility wrapper functions in tools/search.py
+- ✅ Support for pagination, time filtering, language selection, safe search
+- ✅ Research workflow generation and result categorization
+- ✅ Integration with note creation and task management
+- ✅ Dynamic date handling for current year searches
+- ✅ Test coverage with 19 passing unit tests
 
 #### Acceptance Criteria:
 
-- Agent can perform web searches via SearXNG
-- Search results are properly formatted and useful
-- Privacy features work as expected
-- Search can be combined with note-taking workflows
+- [x] Agent can perform web searches via SearXNG ✅
+- [x] Search results are properly formatted and useful ✅
+- [x] Privacy features work as expected ✅
+- [x] Search can be combined with note-taking workflows ✅
 
 ---
 
