@@ -94,9 +94,12 @@ def create_youtube_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
     Returns:
         MCPServerStdio instance or None if not configured
     """
-    # TODO: Implement YouTube MCP server configuration
-    # Will be implemented in Task 2.3
-    return None
+    # YouTube MCP server doesn't require API key - it works without one
+    # Always create the server as it provides video processing capabilities
+    return MCPServerStdio(
+        command='npx',
+        args=['-y', 'youtube-video-summarizer-mcp']
+    )
 
 
 def create_all_mcp_servers(config: AgentConfig) -> List[MCPServerStdio]:
