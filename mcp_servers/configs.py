@@ -96,9 +96,10 @@ def create_youtube_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
     """
     # YouTube MCP server doesn't require API key - it works without one
     # Always create the server as it provides video processing capabilities
+    # Using our PydanticAI-compatible fork with underscore tool naming
     return MCPServerStdio(
         command='npx',
-        args=['-y', 'youtube-video-summarizer-mcp']
+        args=['-y', 'youtube-video-summarizer-mcp-pydanticai']
     )
 
 

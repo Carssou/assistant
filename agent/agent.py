@@ -80,10 +80,10 @@ class ProductivityAgent:
             if self.mcp_servers:
                 async with self.agent.run_mcp_servers():
                     result = await self.agent.run(message, deps=self.deps)
-                    response = result.data
+                    response = result.output
             else:
                 result = await self.agent.run(message, deps=self.deps)
-                response = result.data
+                response = result.output
             
             # Log successful completion to Langfuse
             if generation:
@@ -92,7 +92,16 @@ class ProductivityAgent:
             
             return response
         except Exception as e:
+            # Log detailed error information
+            import traceback
             self.logger.error(f"Error in conversation: {e}")
+            self.logger.error(f"Error type: {type(e).__name__}")
+            self.logger.error(f"Full traceback: {traceback.format_exc()}")
+            
+            # Check if it's a validation error and extract more details
+            if hasattr(e, 'errors'):
+                self.logger.error(f"Validation errors: {e.errors()}")
+            
             error_msg = f"I encountered an error: {str(e)}"
             
             # Log error to Langfuse
