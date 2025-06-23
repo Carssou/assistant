@@ -7,7 +7,7 @@ A PydanticAI-powered agent with a Gradio chat GUI that integrates multiple MCP s
 - **Note Management**: Obsidian vault integration for creating, reading, and searching notes
 - **Web Search**: Privacy-focused search through SearXNG
 - **Task Management**: Todoist integration for task CRUD operations
-- **Video Processing**: YouTube video summarization and transcript extraction
+- **Video Processing**: Enhanced YouTube video analysis with intelligent summarization
 - **Chat Interface**: Gradio-based GUI with streaming responses
 - **Configurable LLM**: Support for AWS Bedrock and OpenAI providers
 
@@ -66,8 +66,8 @@ python main.py
 # Single query mode
 python main.py --query "Hello, can you introduce yourself?"
 
-# GUI interface (coming soon)
-python gui.py
+# GUI interface (planned for future)
+# python gui.py
 ```
 
 ## Configuration
@@ -82,7 +82,7 @@ python gui.py
 1. **Obsidian**: Set `OBSIDIAN_VAULT_PATH` to your vault location
 2. **SearXNG**: Requires Docker - run `docker-compose up -d` to start local instance
 3. **Todoist**: Add your Todoist API token
-4. **YouTube**: Optional API key for enhanced features
+4. **YouTube**: YouTube Data API v3 key recommended for full metadata (works without key using fallbacks)
 
 #### SearXNG Setup
 
@@ -108,6 +108,7 @@ project/
 ├── agent/          # PydanticAI agent implementation
 ├── config/         # Configuration management
 ├── mcp_servers/    # MCP server configurations
+├── tools/          # Tool utilities 
 ├── utils/          # Shared utilities
 ├── tests/          # Unit tests
 ├── main.py         # CLI entry point
@@ -152,10 +153,17 @@ python main.py --query "test message"
 
 This project integrates the following MCP servers:
 
-- [obsidian-mcp](https://github.com/StevenStavrakis/obsidian-mcp) - Note management
-- [mcp-searxng](https://github.com/ihor-sokoliuk/mcp-searxng) - Web search
+- [obsidian-mcp-pydanticai](https://github.com/Carssou/obsidian-mcp-pydanticai) - Enhanced note management (our fork)
+- [mcp-searxng](https://github.com/ihor-sokoliuk/mcp-searxng) - Privacy-focused web search
 - [todoist-mcp-server](https://github.com/abhiz123/todoist-mcp-server) - Task management
-- [youtube-video-summarizer-mcp](https://github.com/nabid-pf/youtube-video-summarizer-mcp) - Video processing
+- [youtube-video-summarizer-mcp-pydanticai](https://github.com/Carssou/youtube-video-summarizer-mcp-pydanticai) - Enhanced video analysis (our fork)
+
+### Enhanced Forks
+
+We've created enhanced versions of MCP servers to improve agent integration:
+
+- **Obsidian Fork**: Fixed tool naming compatibility for PydanticAI
+- **YouTube Fork**: Returns structured JSON data for intelligent agent analysis, supports both underscore and hyphen naming conventions, includes YouTube Data API v3 integration with multiple fallback strategies
 
 ## License
 

@@ -30,10 +30,7 @@ project/
 ├── mcp_servers/
 │   └── configs.py        # MCP server configurations
 ├── tools/
-│   ├── obsidian.py       # Note management wrappers
-│   ├── search.py         # Web search utilities
-│   ├── tasks.py          # Task management utilities
-│   └── youtube.py        # Video processing utilities
+│   └── __init__.py       # Tool utilities (MCP servers provide direct integration)
 └── utils/
     └── logger.py         # Logging configuration
 ```
@@ -41,10 +38,10 @@ project/
 ## MCP Server Integration
 
 ### Configured Servers
-1. **Obsidian MCP**: `npx -y obsidian-mcp /path/to/vault` (note management)
+1. **Obsidian MCP**: `npx -y obsidian-mcp-pydanticai /path/to/vault` (note management) - Our enhanced fork
 2. **SearXNG MCP**: Privacy-focused web search via local SearXNG instance
-3. **Todoist MCP**: Task management (SSH connection, may rebuild as stdio)
-4. **YouTube MCP**: Video summarization and transcript extraction
+3. **Todoist MCP**: Task management via stdio MCP server
+4. **YouTube MCP**: Video analysis and intelligent summarization - Our enhanced fork with agent-friendly design
 
 ### Environment Variables
 ```env
@@ -102,16 +99,16 @@ class AgentDependencies:
 ## Common Workflows
 
 ### Adding New MCP Server
-1. Add server configuration to `mcp_servers/configs.py`
-2. Create tool wrapper in appropriate `tools/` module
-3. Update environment variables in `.env.example`
+1. Add server configuration function to `mcp_servers/configs.py`
+2. Update environment variables in `.env.example`
+3. Add server to `create_all_mcp_servers()` function
 4. Add integration tests
-5. Update agent initialization
+5. Tools are automatically available via MCP protocol
 
 ### Multi-Tool Coordination Examples
-- **Research & Note**: Search web → create research note → generate follow-up tasks
-- **Video Learning**: Summarize YouTube video → create study notes → add to task list
-- **Information Synthesis**: Search multiple sources → create comprehensive note → organize in vault
+- **Research & Note**: Search web → agent analyzes results → creates structured research note → generates follow-up tasks
+- **Video Learning**: Get YouTube video data → agent summarizes content → creates study notes with proper titles → adds tasks if needed
+- **Information Synthesis**: Search multiple sources → agent synthesizes information → creates comprehensive note → organizes in vault with tags
 
 ## Development Commands
 
@@ -133,8 +130,8 @@ python main.py
 # Single query mode
 python main.py --query "Hello, test message"
 
-# Gradio GUI (future implementation)
-python gui.py
+# Gradio GUI (planned for future implementation)
+# python gui.py
 ```
 
 ### Testing

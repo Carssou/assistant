@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Goal**: Create a PydanticAI-powered agent with a chat GUI that integrates specific MCP servers for productivity tasks. Start simple and iterate to add more capabilities.
+**Goal**: Create a PydanticAI-powered agent with CLI interface (GUI planned) that integrates enhanced MCP servers for productivity tasks. Core functionality complete with intelligent agent-tool coordination.
 
 ## Architecture Overview
 
@@ -23,10 +23,10 @@
    - Real-time agent responses
 
 3. **MCP Server Integration**
-   - **Obsidian MCP**: `obsidian-mcp` stdio server for note management
-   - **SearXNG MCP**: `mcp-searxng` stdio server for web search
-   - **Todoist MCP**: `todoist-mcp-server` (SSH, potentially rebuild as stdio)
-   - **YouTube MCP**: `youtube-video-summarizer-mcp` stdio server for video processing
+   - **Obsidian MCP**: `obsidian-mcp-pydanticai` enhanced stdio server for note management
+   - **SearXNG MCP**: `mcp-searxng` stdio server for privacy-focused web search
+   - **Todoist MCP**: `todoist-mcp-server` stdio server for task management
+   - **YouTube MCP**: `youtube-video-summarizer-mcp-pydanticai` enhanced stdio server for video analysis
 
 ### Agent Capabilities
 
@@ -63,10 +63,10 @@ Based on the selected MCP servers:
 ```python
 # Planned MCP server configurations
 servers = [
-    MCPServerStdio('npx', args=['-y', 'obsidian-mcp-pydanticai', vault_path]),  # stdio (fixed fork)
-    MCPServerStdio('python', args=['searxng-mcp-server.py']),        # stdio
-    MCPServerStdio('npx', args=['-y', '@abhiz123/todoist-mcp-server']),  # SSH (may rebuild)
-    MCPServerStdio('python', args=['youtube-summarizer-mcp.py'])     # stdio
+    MCPServerStdio('npx', args=['-y', 'obsidian-mcp-pydanticai', vault_path]),     # Enhanced fork
+    MCPServerStdio('npx', args=['-y', 'mcp-searxng']),                            # Privacy search
+    MCPServerStdio('npx', args=['-y', '@abhiz123/todoist-mcp-server']),           # Task management
+    MCPServerStdio('npx', args=['-y', 'youtube-video-summarizer-mcp-pydanticai']) # Enhanced fork
 ]
 ```
 
@@ -140,11 +140,16 @@ GUI_SHARE=false                             # Enable public sharing
 - **Installation**: `npm install -g @abhiz123/todoist-mcp-server`
 - **Expected Tools**: create-task, list-tasks, update-task, complete-task
 
-### 4. YouTube Video Summarizer MCP
+### 4. YouTube Video Summarizer MCP (Enhanced)
 
-- **Repository**: https://github.com/nabid-pf/youtube-video-summarizer-mcp
-- **Type**: stdio server
-- **Expected Tools**: summarize-video, extract-transcript
+- **Repository**: https://github.com/Carssou/youtube-video-summarizer-mcp-pydanticai (our enhanced fork)
+- **Type**: stdio server with agent-friendly design
+- **Features**: 
+  - Returns structured JSON data for intelligent agent analysis
+  - YouTube Data API v3 integration with multiple fallback strategies
+  - Universal compatibility (supports both underscore and hyphen naming)
+  - Enhanced error handling and user guidance
+- **Expected Tools**: get_video_info (and get-video-info for compatibility)
 
 ## Agent Design Patterns
 
@@ -191,13 +196,14 @@ Research current maintenance status:
 
 ## Development Approach
 
-### Start Simple, Iterate
+### Development Status
 
-1. **Core Agent**: Basic PydanticAI setup with one MCP server
-2. **Add Servers**: Integrate remaining MCP servers one by one
-3. **GUI Integration**: Add chat interface
-4. **Polish**: Improve UX, error handling, configuration
-5. **Extend**: Add new MCP servers as needed
+1. ✅ **Core Agent**: PydanticAI setup with enhanced error handling and logging
+2. ✅ **All MCP Servers**: All 4 servers integrated and working
+3. ✅ **Enhanced Forks**: Created improved versions of Obsidian and YouTube MCP servers
+4. ✅ **Agent Intelligence**: Proper separation of tool extraction vs agent analysis
+5. 🔄 **GUI Integration**: CLI complete, Gradio GUI planned for future
+6. 🔄 **Additional Servers**: Framework ready for easy extension
 
 ### Learning Focus
 
@@ -241,12 +247,13 @@ project/
 
 ### Functional Requirements
 
-- ✅ Chat with agent through GUI
-- ✅ Create and search notes in Obsidian
-- ✅ Search web via SearXNG
-- ✅ Manage Todoist tasks
-- ✅ Summarize YouTube videos
-- ✅ Easy addition of new MCP servers
+- ✅ Chat with agent through CLI (GUI planned)
+- ✅ Create and search notes in Obsidian with intelligent coordination
+- ✅ Search web via SearXNG with privacy focus
+- ✅ Manage Todoist tasks with natural language
+- ✅ Analyze YouTube videos with intelligent summarization
+- ✅ Multi-tool coordination with agent intelligence
+- ✅ Easy addition of new MCP servers through modular configuration
 
 ### Technical Requirements
 
