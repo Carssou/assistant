@@ -4,15 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a PydanticAI-powered agent that intelligently coordinates multiple MCP servers for seamless productivity workflows. Unlike rigid workflow engines, this agent uses natural language to dynamically orchestrate tools based on user intent. The system features advanced multi-tool coordination with graceful degradation and real-time health monitoring.
+This is a PydanticAI-powered agent with integrated MCP servers for productivity tasks. The agent has access to tools from multiple MCP servers and can use them effectively based on user requests. The system features reliable MCP server integration with health monitoring and error handling.
 
 ## Architecture
 
 ### Core Components
-- **Agent**: PydanticAI agent with intelligent multi-tool coordination and configurable LLM providers (AWS Bedrock preferred, OpenAI fallback)
-- **Multi-Tool Coordination**: AI-driven orchestration of MCP servers with context flow and graceful degradation
+- **Agent**: PydanticAI agent with MCP server integration and configurable LLM providers (AWS Bedrock preferred, OpenAI fallback)
 - **MCP Servers**: 4 integrated stdio-based servers (Obsidian, SearXNG, Todoist, YouTube) with health monitoring
 - **Dependencies**: Async HTTP client, Langfuse observability, and configuration management
+- **Error Handling**: Graceful degradation when tools/servers are unavailable
 - **GUI**: Gradio chat interface with streaming responses (planned)
 
 ### Project Structure
@@ -37,7 +37,7 @@ project/
 │   ├── server_monitor.py # MCP server health monitoring
 │   └── graceful_degradation.py # Tool failure handling
 └── docs/
-    └── multi_tool_workflows.md # Human-readable coordination examples
+    └── usage_examples.md # Human-readable usage examples
 ```
 
 ## MCP Server Integration
@@ -110,20 +110,19 @@ class AgentDependencies:
 4. Add integration tests
 5. Tools are automatically available via MCP protocol
 
-### Multi-Tool Coordination Features ✅ COMPLETED
-- **AI-First Orchestration**: Natural language coordination instead of rigid workflow graphs
-- **Context Flow**: Information seamlessly flows between tools (search results → note content → task descriptions)
-- **Intelligent Adaptation**: Agent adapts workflows based on content type and user intent
-- **Graceful Degradation**: Automatic fallbacks when tools are unavailable
+### MCP Server Integration Features ✅ COMPLETED
+- **Reliable Integration**: 4 MCP servers working together effectively
+- **Tool Selection**: Agent selects appropriate tools based on request context
+- **Error Handling**: Graceful degradation when tools are unavailable
 - **Health Monitoring**: Real-time MCP server status tracking with performance metrics
-- **Performance**: Complex workflows complete in 15-30 seconds
+- **Performance**: Multi-tool tasks complete in 15-30 seconds
 
-### Example Coordination Patterns
-- **Research & Note**: "Research AI agents and create comprehensive notes" → Search → Analysis → Structured note → Optional tasks
-- **Information Synthesis**: "Compare PydanticAI vs LangChain" → Multiple searches → Cross-reference → Comparison note
-- **Content Curation**: "Organize MCP server info in my knowledge base" → Search → Read → Vault search → Organized note → Links
+### Example Usage Patterns
+- **Research & Note**: "Research AI agents and create comprehensive notes" → Web search → Note creation → Optional tasks
+- **Information Synthesis**: "Compare PydanticAI vs LangChain" → Multiple searches → Comparison note creation
+- **Content Curation**: "Organize MCP server info in my knowledge base" → Search → Vault search → Organized note with connections
 - **Video Learning**: "Analyze this YouTube video and create study materials" → Video processing → Study notes → Practice tasks
-- **Project Planning**: "Plan a RAG system project" → Research → Project note → Task breakdown → Timeline
+- **Project Planning**: "Plan a RAG system project" → Research → Project note → Task breakdown
 
 ## Development Commands
 

@@ -1,6 +1,6 @@
-# Multi-Tool Coordination Examples
+# Usage Examples
 
-This document shows how the agent intelligently coordinates multiple MCP servers to handle complex productivity tasks. Unlike rigid workflow engines, these patterns emerge naturally from the agent's intelligence.
+This document shows how the PydanticAI agent uses multiple tools from different MCP servers to accomplish complex productivity tasks.
 
 ## How It Works
 
@@ -8,8 +8,8 @@ When you make a request like "Research AI agents and create notes," the agent:
 
 1. **Understands the intent** - recognizes this needs research + note creation
 2. **Selects appropriate tools** - chooses web search and note creation tools
-3. **Coordinates execution** - runs tools in logical sequence
-4. **Maintains context** - passes information between tools seamlessly
+3. **Executes tool calls** - runs tools in logical sequence based on context
+4. **Maintains context** - passes information between tool calls
 
 ## Example Workflows
 
@@ -101,45 +101,41 @@ When you make a request like "Research AI agents and create notes," the agent:
 
 ## Key Benefits
 
-### 🔄 **Context Flow**
-Information flows naturally between tools - search results become note content, which informs task creation.
+### 🔄 **Tool Integration**
+Information flows naturally between tool calls - search results become note content, which can inform task creation.
 
-### 🧠 **Intelligent Adaptation** 
-The agent adapts the workflow based on what it finds. If a search reveals tutorial content, it suggests practice tasks. If it finds research papers, it recommends source verification.
+### 🧠 **Context Awareness** 
+The agent adapts its tool usage based on what it finds. Tutorial content might trigger practice task creation, research papers might prompt source verification.
 
 ### ⚡ **Natural Interface**
-Just describe what you want in plain English. No need to configure workflows, map dependencies, or write code.
+Describe what you want in plain English. The agent selects appropriate tools based on the request.
 
-### 🛡️ **Graceful Degradation**
-If a tool is unavailable, the agent automatically finds alternatives or continues with reduced functionality.
+### 🛡️ **Error Handling**
+If a tool is unavailable, the agent can try alternative approaches or continue with available tools.
 
-### 📈 **Infinitely Extensible**
-Add new MCP servers and the agent automatically discovers and uses them. No workflow reconfiguration needed.
+### 📈 **Extensible**
+Add new MCP servers and the agent automatically has access to their tools.
 
 ## Performance
 
-- **Typical completion time:** 15-30 seconds for complex workflows
-- **Tool coordination:** Automatic and intelligent
-- **Error handling:** Graceful degradation and recovery
-- **Concurrent operations:** Tools run in parallel when possible
+- **Typical completion time:** 15-30 seconds for multi-tool tasks
+- **Tool selection:** Based on agent reasoning and context
+- **Error handling:** Graceful degradation with monitoring
+- **MCP integration:** Reliable stdio connections with health checks
 
-## The AI-First Advantage
+## Agent Approach
 
-This approach is fundamentally different from workflow engines like LangGraph:
+This is a standard PydanticAI agent with multiple MCP servers:
 
-**Traditional Workflow Engine:**
-```python
-# Must explicitly program every path
-workflow.add_edge("search", "create_note")
-workflow.add_edge("create_note", "create_task") 
-# Breaks when you add new tools or change requirements
+**How it works:**
+```
+User request → Agent reasoning → Tool selection → Tool execution → Response
 ```
 
-**AI-First Coordination:**
-```
-"Research AI agents and create comprehensive notes with follow-up tasks"
-# Agent figures out the optimal sequence automatically
-# Works with any new tools or novel requests
-```
+**Tool availability:**
+- Tools are provided by MCP servers
+- Agent has access to all available tools
+- Agent selects tools based on request context
+- Natural language interface handles complexity
 
-The future of productivity tools is natural language coordination, not rigid workflow configuration.
+This demonstrates effective MCP server integration with a single capable agent.

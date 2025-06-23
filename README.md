@@ -1,18 +1,16 @@
-# Multi-Tool AI Agent
+# PydanticAI Productivity Agent
 
-A PydanticAI-powered agent that intelligently coordinates multiple MCP servers for seamless productivity workflows. Unlike rigid workflow engines, this agent uses natural language to dynamically orchestrate tools based on user intent.
+A PydanticAI-powered agent with integrated MCP servers for productivity tasks. The agent has access to multiple tools across note management, web search, task management, and video processing.
 
-## Key Features
+## Features
 
-- **🔄 Multi-Tool Coordination**: Intelligent orchestration across all productivity tools
 - **📝 Note Management**: Obsidian vault integration with 11+ note operations
-- **🔍 Privacy-Focused Search**: SearXNG integration for secure web research
+- **🔍 Privacy-Focused Search**: SearXNG integration for secure web research  
 - **✅ Task Management**: Todoist integration for comprehensive task handling
 - **🎥 Video Analysis**: Enhanced YouTube processing with intelligent summarization
-- **🧠 AI-First Architecture**: Natural language coordination instead of rigid workflows
-- **⚡ Performance**: Complex workflows complete in 15-30 seconds
-- **🛡️ Graceful Degradation**: Automatic fallbacks when tools are unavailable
-- **📊 Health Monitoring**: Real-time MCP server status tracking
+- **🔧 MCP Server Integration**: 4 reliable MCP servers with health monitoring
+- **🛡️ Error Handling**: Graceful degradation when tools are unavailable
+- **⚡ Performance**: Tool operations complete quickly with proper error recovery
 
 ## Requirements
 
@@ -77,35 +75,35 @@ python main.py --query "Find MCP server resources and organize them in my knowle
 # python gui.py
 ```
 
-## Multi-Tool Coordination Examples
+## Usage Examples
 
-The agent intelligently coordinates multiple tools based on your natural language requests:
+The agent can use multiple tools to accomplish complex tasks:
 
 ### Research & Documentation
 ```bash
 "Research the latest developments in transformer architectures and create study notes"
 ```
-**What happens:** Web search → Analysis → Structured note creation → Optional follow-up tasks
+**Agent uses:** Web search → Note creation → Optional task creation
 
-### Content Curation
+### Content Synthesis
 ```bash
 "Find information about PydanticAI vs LangChain and create a comprehensive comparison"
 ```
-**What happens:** Multiple searches → Source analysis → Synthesis → Organized comparison note
+**Agent uses:** Multiple searches → Note creation with comparison format
 
-### Learning Workflows
+### Video Analysis
 ```bash
 "Analyze this YouTube video about machine learning and create study materials"
 ```
-**What happens:** Video processing → Key insights extraction → Study notes → Practice tasks
+**Agent uses:** Video processing → Study note creation
 
-### Knowledge Integration
+### Knowledge Organization
 ```bash
 "Search for MCP server documentation and organize it in my knowledge base"
 ```
-**What happens:** Search → Read sources → Check existing notes → Create organized content → Link connections
+**Agent uses:** Search → Vault search → Note creation with connections
 
-See [Multi-Tool Workflows Documentation](docs/multi_tool_workflows.md) for detailed examples.
+See [Usage Examples Documentation](docs/usage_examples.md) for more details.
 
 ## Configuration
 
@@ -160,24 +158,19 @@ project/
 └── gui.py             # Gradio GUI (planned)
 ```
 
-### AI-First Coordination
+### Agent Architecture
 
-This agent uses **natural language coordination** instead of rigid workflow graphs:
+This is a standard PydanticAI agent with MCP server integration:
 
-**Traditional Approach (LangGraph):**
-```python
-# Must explicitly program every workflow path
-workflow.add_edge("search", "create_note")
-workflow.add_edge("create_note", "create_task")
-# Breaks when you add new tools
-```
+**Tool Access:**
+- Agent has access to tools from 4 MCP servers
+- Agent decides which tools to use based on context
+- Natural language requests → appropriate tool calls
 
-**AI-First Approach (This Agent):**
-```
-"Research AI and create notes with follow-up tasks"
-# Agent figures out optimal tool sequence automatically
-# Works with any new MCP servers or novel requests
-```
+**Error Handling:**
+- Health monitoring for MCP servers
+- Graceful degradation when tools are unavailable
+- Alternative tool suggestions when primary tools fail
 
 ## Development
 
