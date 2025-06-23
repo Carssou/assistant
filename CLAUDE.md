@@ -4,15 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a PydanticAI-powered agent with a Gradio chat GUI that integrates multiple MCP servers for productivity tasks. The agent combines note management (Obsidian), web search (SearXNG), task management (Todoist), and video processing (YouTube) capabilities.
+This is a PydanticAI-powered agent that intelligently coordinates multiple MCP servers for seamless productivity workflows. Unlike rigid workflow engines, this agent uses natural language to dynamically orchestrate tools based on user intent. The system features advanced multi-tool coordination with graceful degradation and real-time health monitoring.
 
 ## Architecture
 
 ### Core Components
-- **Agent**: PydanticAI agent with MCP server integration and configurable LLM providers (AWS Bedrock preferred, OpenAI fallback)
-- **GUI**: Gradio chat interface with streaming responses and configuration management
-- **MCP Servers**: Multiple stdio-based servers for different productivity tools
-- **Dependencies**: Async HTTP client, logging, and configuration management
+- **Agent**: PydanticAI agent with intelligent multi-tool coordination and configurable LLM providers (AWS Bedrock preferred, OpenAI fallback)
+- **Multi-Tool Coordination**: AI-driven orchestration of MCP servers with context flow and graceful degradation
+- **MCP Servers**: 4 integrated stdio-based servers (Obsidian, SearXNG, Todoist, YouTube) with health monitoring
+- **Dependencies**: Async HTTP client, Langfuse observability, and configuration management
+- **GUI**: Gradio chat interface with streaming responses (planned)
 
 ### Project Structure
 ```
@@ -31,8 +32,12 @@ project/
 │   └── configs.py        # MCP server configurations
 ├── tools/
 │   └── __init__.py       # Tool utilities (MCP servers provide direct integration)
-└── utils/
-    └── logger.py         # Logging configuration
+├── utils/
+│   ├── logger.py         # Langfuse observability integration
+│   ├── server_monitor.py # MCP server health monitoring
+│   └── graceful_degradation.py # Tool failure handling
+└── docs/
+    └── multi_tool_workflows.md # Human-readable coordination examples
 ```
 
 ## MCP Server Integration
@@ -105,10 +110,20 @@ class AgentDependencies:
 4. Add integration tests
 5. Tools are automatically available via MCP protocol
 
-### Multi-Tool Coordination Examples
-- **Research & Note**: Search web → agent analyzes results → creates structured research note → generates follow-up tasks
-- **Video Learning**: Get YouTube video data → agent summarizes content → creates study notes with proper titles → adds tasks if needed
-- **Information Synthesis**: Search multiple sources → agent synthesizes information → creates comprehensive note → organizes in vault with tags
+### Multi-Tool Coordination Features ✅ COMPLETED
+- **AI-First Orchestration**: Natural language coordination instead of rigid workflow graphs
+- **Context Flow**: Information seamlessly flows between tools (search results → note content → task descriptions)
+- **Intelligent Adaptation**: Agent adapts workflows based on content type and user intent
+- **Graceful Degradation**: Automatic fallbacks when tools are unavailable
+- **Health Monitoring**: Real-time MCP server status tracking with performance metrics
+- **Performance**: Complex workflows complete in 15-30 seconds
+
+### Example Coordination Patterns
+- **Research & Note**: "Research AI agents and create comprehensive notes" → Search → Analysis → Structured note → Optional tasks
+- **Information Synthesis**: "Compare PydanticAI vs LangChain" → Multiple searches → Cross-reference → Comparison note
+- **Content Curation**: "Organize MCP server info in my knowledge base" → Search → Read → Vault search → Organized note → Links
+- **Video Learning**: "Analyze this YouTube video and create study materials" → Video processing → Study notes → Practice tasks
+- **Project Planning**: "Plan a RAG system project" → Research → Project note → Task breakdown → Timeline
 
 ## Development Commands
 

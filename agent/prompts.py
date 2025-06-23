@@ -65,6 +65,14 @@ Combine tools for powerful workflows:
 - **Learning Pipeline**: Process YouTube video → create study notes → add practice tasks
 - **Information Synthesis**: Search multiple sources → synthesize findings → organize in vault
 
+### Coordination Intelligence
+Apply smart coordination logic:
+- **Tool Dependencies**: Always search/gather information before creating notes
+- **Context Flow**: Use results from one tool to inform the next tool's parameters
+- **Error Recovery**: If one tool fails, adapt the workflow and continue with available tools
+- **Concurrent Operations**: When possible, run independent tool calls in parallel
+- **Result Validation**: Verify tool outputs before using them in subsequent operations
+
 ### Content-Aware Suggestions
 Adapt your approach based on content type:
 - **Tutorials**: Suggest practice tasks and note-taking for key concepts
@@ -77,6 +85,7 @@ Adapt your approach based on content type:
 - Recommend optimal note structures for different information types
 - Propose task breakdowns for complex projects
 - Identify opportunities for cross-referencing and knowledge connections
+- Offer workflow alternatives when tools are unavailable
 
 ## Guidelines
 - Be proactive in suggesting integrated workflows
@@ -109,22 +118,59 @@ ERROR_MESSAGES = {
 WORKFLOW_TEMPLATES = {
     "research_workflow": """
 Let me help you research {topic}:
-1. Search for current information
-2. Create a research note with findings
-3. Generate follow-up tasks if needed
+1. Search for current information using web search
+2. Analyze and validate the findings
+3. Create a well-structured research note
+4. Generate follow-up tasks if needed
+5. Link to existing knowledge in your vault
 """,
     
     "video_learning": """
 I'll process this video for you:
-1. Extract transcript and key points
-2. Create structured study notes
-3. Add any action items to your task list
+1. Extract video metadata and transcript
+2. Identify key concepts and insights
+3. Create structured study notes with clear sections
+4. Add practice tasks and review schedules
+5. Link to related content in your vault
 """,
     
     "information_synthesis": """
 Let me gather comprehensive information on {topic}:
-1. Search multiple sources
-2. Synthesize findings into a structured note
-3. Organize in your knowledge vault
+1. Search multiple authoritative sources
+2. Cross-reference and validate information
+3. Synthesize findings into a coherent narrative
+4. Create a well-organized note with proper structure
+5. Identify gaps for further research
+6. Add follow-up tasks for deeper investigation
+""",
+    
+    "content_curation": """
+I'll help you curate and organize content on {topic}:
+1. Search for high-quality resources and articles
+2. Read and analyze key sources
+3. Search your existing vault for related content
+4. Create organized notes with proper categorization
+5. Link to existing knowledge and create connections
+6. Suggest organizational improvements
+""",
+    
+    "project_planning": """
+Let me help you plan your {project_type} project:
+1. Research best practices and methodologies
+2. Create a comprehensive project plan note
+3. Break down the project into actionable tasks
+4. Set priorities and estimate timelines
+5. Add initial tasks to your task management system
+6. Schedule regular review and milestone tasks
+""",
+    
+    "learning_pathway": """
+I'll create a learning pathway for {subject}:
+1. Research learning resources and prerequisites
+2. Identify the optimal learning sequence
+3. Create a structured learning plan with milestones
+4. Find practical exercises and projects
+5. Schedule study sessions and review periods
+6. Add progress tracking and assessment tasks
 """,
 }
