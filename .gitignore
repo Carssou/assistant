@@ -162,6 +162,4 @@ local_config.py
 
 # SearXNG auto-generated files
 searxng/uwsgi.ini
-
-# Claude Code guidance file (contains project-specific instructions)
-CLAUDE.md
+ 

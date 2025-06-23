@@ -11,6 +11,7 @@ A PydanticAI-powered agent with integrated MCP servers for productivity tasks. T
 - **🔧 MCP Server Integration**: 4 reliable MCP servers with health monitoring
 - **🛡️ Error Handling**: Graceful degradation when tools are unavailable
 - **⚡ Performance**: Tool operations complete quickly with proper error recovery
+- **🌐 Web Interface**: Gradio GUI with streaming responses and session memory
 
 ## Requirements
 
@@ -71,8 +72,8 @@ python main.py --query "Hello, can you introduce yourself?"
 python main.py --query "Research AI agents and create comprehensive notes"
 python main.py --query "Find MCP server resources and organize them in my knowledge base"
 
-# GUI interface (planned for future)
-# python gui.py
+# Gradio GUI interface
+python gui.py
 ```
 
 ## Usage Examples
@@ -155,7 +156,7 @@ project/
 ├── docs/              # Human-readable documentation
 │   └── multi_tool_workflows.md # Coordination examples
 ├── main.py            # CLI entry point
-└── gui.py             # Gradio GUI (planned)
+└── gui.py             # Gradio web interface
 ```
 
 ### Agent Architecture

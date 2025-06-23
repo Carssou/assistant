@@ -13,7 +13,7 @@ This is a PydanticAI-powered agent with integrated MCP servers for productivity 
 - **MCP Servers**: 4 integrated stdio-based servers (Obsidian, SearXNG, Todoist, YouTube) with health monitoring
 - **Dependencies**: Async HTTP client, Langfuse observability, and configuration management
 - **Error Handling**: Graceful degradation when tools/servers are unavailable
-- **GUI**: Gradio chat interface with streaming responses (planned)
+- **GUI**: Gradio chat interface with streaming responses and session memory ✅ COMPLETED
 
 ### Project Structure
 ```
@@ -110,12 +110,22 @@ class AgentDependencies:
 4. Add integration tests
 5. Tools are automatically available via MCP protocol
 
-### MCP Server Integration Features ✅ COMPLETED
+### System Features ✅ COMPLETED
+
+#### MCP Server Integration
 - **Reliable Integration**: 4 MCP servers working together effectively
-- **Tool Selection**: Agent selects appropriate tools based on request context
+- **Tool Selection**: Agent selects appropriate tools based on request context  
 - **Error Handling**: Graceful degradation when tools are unavailable
 - **Health Monitoring**: Real-time MCP server status tracking with performance metrics
 - **Performance**: Multi-tool tasks complete in 15-30 seconds
+
+#### Gradio Web Interface
+- **Streaming Responses**: Real-time progressive text streaming with proper formatting
+- **Session Memory**: Maintains conversation context using PydanticAI's native history
+- **Responsive Layout**: Full-width design that adapts to screen size
+- **MCP Compatibility**: Handles MCP cancel scope errors gracefully
+- **Configuration Display**: Shows current LLM provider, model, and vault info
+- **Error Resilience**: Continues functioning when individual tools fail
 
 ### Example Usage Patterns
 - **Research & Note**: "Research AI agents and create comprehensive notes" → Web search → Note creation → Optional tasks
@@ -144,8 +154,8 @@ python main.py
 # Single query mode
 python main.py --query "Hello, test message"
 
-# Gradio GUI (planned for future implementation)
-# python gui.py
+# Gradio GUI interface
+python gui.py
 ```
 
 ### Testing

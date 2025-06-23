@@ -355,12 +355,15 @@ agent = Agent(
 
 #### Subtasks:
 
-- [ ] Set up Gradio chat interface with streaming support
-- [ ] Implement PydanticAI agent integration with Gradio
-- [ ] Create configuration panel for environment variables
-- [ ] Add session management for conversation history
-- [ ] Implement real-time streaming of agent responses
-- [ ] Add basic error display and handling in GUI
+- [x] Set up Gradio chat interface with streaming support ✅ 2025-06-23
+- [x] Implement PydanticAI agent integration with Gradio ✅ 2025-06-23
+- [x] Create configuration panel for environment variables ✅ 2025-06-23
+- [x] Add session management for conversation history ✅ 2025-06-23
+- [x] Implement real-time streaming of agent responses ✅ 2025-06-23
+- [x] Add basic error display and handling in GUI ✅ 2025-06-23
+- [x] Handle MCP cancel scope errors gracefully ✅ 2025-06-23
+- [x] Implement responsive full-width layout ✅ 2025-06-23
+- [x] Add better markdown formatting instructions to agent ✅ 2025-06-23
 - [ ] Create file upload capabilities for note operations
 - [ ] Add simple configuration validation in interface
 

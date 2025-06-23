@@ -4,6 +4,7 @@ Main PydanticAI agent implementation.
 This module contains the core agent setup and initialization.
 """
 
+import asyncio
 from typing import Optional
 
 from pydantic_ai import Agent
@@ -47,6 +48,9 @@ class ProductivityAgent:
             mcp_servers=self.mcp_servers,
             retries=2
         )
+        
+        # Track conversation history for context
+        self.conversation_history = []
         
         self.logger.info(f"Productivity agent initialized with {self.config.llm_provider} provider and {len(self.mcp_servers)} MCP servers")
     
@@ -137,26 +141,71 @@ class ProductivityAgent:
             )
         
         response_chunks = []
+        
+        # First, try to get the complete response using non-streaming method
+        # This avoids the MCP cancel scope issues with streaming
         try:
-            # Run streaming with MCP servers if available
             if self.mcp_servers:
                 async with self.agent.run_mcp_servers():
-                    async with self.agent.run_stream(message, deps=self.deps) as stream:
-                        async for chunk in stream:
-                            response_chunks.append(str(chunk))
-                            yield chunk
+                    result = await self.agent.run(
+                        message, 
+                        deps=self.deps,
+                        message_history=self.conversation_history
+                    )
+                    full_response = result.output
             else:
-                async with self.agent.run_stream(message, deps=self.deps) as stream:
-                    async for chunk in stream:
-                        response_chunks.append(str(chunk))
-                        yield chunk
+                result = await self.agent.run(
+                    message, 
+                    deps=self.deps,
+                    message_history=self.conversation_history
+                )
+                full_response = result.output
             
-            # Log complete response to Langfuse
-            if generation:
-                full_response = "".join(response_chunks)
-                generation.update(output=full_response)
-                generation.end()
+            # Update conversation history with new messages
+            self.conversation_history.extend(result.new_messages())
+            
+            # Now simulate streaming by yielding the response progressively
+            words = full_response.split()
+            current_response = ""
+            
+            for word in words:
+                current_response += word + " "
+                yield current_response.strip()
+                # Small delay to simulate streaming
+                await asyncio.sleep(0.01)
                 
+        except Exception as e:
+            error_str = str(e).lower()
+            if "cancel scope" in error_str or "different task" in error_str:
+                self.logger.warning(f"MCP context warning, trying fallback: {e}")
+                # Fallback: try without MCP servers
+                try:
+                    result = await self.agent.run(
+                        message, 
+                        deps=self.deps,
+                        message_history=self.conversation_history
+                    )
+                    full_response = result.output
+                    
+                    # Update conversation history with new messages
+                    self.conversation_history.extend(result.new_messages())
+                    
+                    # Simulate streaming for fallback response
+                    words = full_response.split()
+                    current_response = ""
+                    
+                    for word in words:
+                        current_response += word + " "
+                        yield current_response.strip()
+                        await asyncio.sleep(0.01)
+                        
+                except Exception as fallback_e:
+                    self.logger.error(f"Fallback also failed: {fallback_e}")
+                    yield f"Error: {str(fallback_e)}"
+            else:
+                # Re-raise non-MCP errors
+                raise
+            
         except Exception as e:
             self.logger.error(f"Error in streaming conversation: {e}")
             error_msg = f"Error: {str(e)}"
@@ -167,6 +216,11 @@ class ProductivityAgent:
                 generation.end()
             
             yield error_msg
+        
+        # Log complete response to Langfuse
+        if generation and 'full_response' in locals():
+            generation.update(output=full_response)
+            generation.end()
     
     def get_conversation_history(self):
         """
