@@ -8,6 +8,7 @@ A PydanticAI-powered agent with integrated MCP servers for productivity tasks. T
 - **🔍 Privacy-Focused Search**: SearXNG integration for secure web research  
 - **✅ Task Management**: Todoist integration for comprehensive task handling
 - **🎥 Video Analysis**: Enhanced YouTube processing with intelligent summarization
+- **👁️ Vision System**: Real-time screen capture and visual analysis with model optimization
 - **🔧 MCP Server Integration**: 4 reliable MCP servers with health monitoring
 - **🛡️ Error Handling**: Graceful degradation when tools are unavailable
 - **⚡ Performance**: Tool operations complete quickly with proper error recovery
@@ -98,6 +99,12 @@ The agent can use multiple tools to accomplish complex tasks:
 ```
 **Agent uses:** Video processing → Study note creation
 
+### Visual Assistance
+```bash
+"What's on my screen?" or "Can you see my screen?"
+```
+**Agent uses:** Screenshot capture → Visual analysis → Step-by-step guidance
+
 ### Knowledge Organization
 ```bash
 "Search for MCP server documentation and organize it in my knowledge base"
@@ -142,19 +149,23 @@ The configuration automatically enables JSON API access required for the MCP ser
 ```
 project/
 ├── agent/              # PydanticAI agent implementation
-│   ├── agent.py       # Main agent with multi-tool coordination
+│   ├── agent.py       # Main agent with multi-tool coordination (refactored)
+│   ├── tools.py       # Vision tools (screenshot, analysis)
 │   ├── dependencies.py # Dependency injection container  
 │   └── prompts.py     # Dynamic system prompts with coordination logic
 ├── config/            # Configuration management
 ├── mcp_servers/       # MCP server configurations
-├── tools/             # Tool utilities and wrapper functions
 ├── utils/             # Shared utilities
+│   ├── screen_capture.py     # Screenshot functionality
 │   ├── logger.py      # Langfuse integration
 │   ├── server_monitor.py     # Health monitoring
 │   └── graceful_degradation.py # Tool failure handling
-├── tests/             # Comprehensive unit tests
+├── tests/             # Comprehensive unit and integration tests
+│   ├── test_agent.py  # Core agent functionality tests
+│   ├── test_gui_integration.py # GUI integration tests
+│   ├── test_real_integration.py # Real .env config tests
+│   └── test_*.py      # Additional test modules
 ├── docs/              # Human-readable documentation
-│   └── multi_tool_workflows.md # Coordination examples
 ├── main.py            # CLI entry point
 └── gui.py             # Gradio web interface
 ```
@@ -164,9 +175,10 @@ project/
 This is a standard PydanticAI agent with MCP server integration:
 
 **Tool Access:**
-- Agent has access to tools from 4 MCP servers
+- Agent has access to tools from 4 MCP servers plus integrated vision system
 - Agent decides which tools to use based on context
 - Natural language requests → appropriate tool calls
+- Direct vision integration for real-time screen analysis
 
 **Error Handling:**
 - Health monitoring for MCP servers

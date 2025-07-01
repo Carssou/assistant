@@ -51,12 +51,17 @@ class AgentConfig(BaseSettings):
     youtube_api_key: Optional[str] = Field(default=None, description="YouTube API key")
     youtube_transcript_language: str = Field(default="en", description="Default transcript language")
     
+    # Custom Python MCP Server Configuration
+    custom_mcp_server_path: Optional[Path] = Field(default=None, description="Path to custom Python MCP server")
+    custom_mcp_server_module: Optional[str] = Field(default=None, description="Python module to run (e.g. 'vision_mcp.server')")
+    custom_mcp_server_entry: str = Field(default="main.py", description="Entry point file for custom MCP server")
+    
     # Development & Monitoring
     log_level: str = Field(default="INFO", description="Logging level")
     langfuse_secret_key: Optional[str] = Field(default=None, description="Langfuse secret key")
     langfuse_public_key: Optional[str] = Field(default=None, description="Langfuse public key")
     langfuse_host: str = Field(default="https://cloud.langfuse.com", description="Langfuse host")
-    debug_mode: bool = Field(default=False, description="Enable debug mode")
+    debug_mode: bool = Field(default=True, description="Enable debug mode")
     
     # GUI Configuration
     gui_theme: str = Field(default="default", description="Gradio theme")

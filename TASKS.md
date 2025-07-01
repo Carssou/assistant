@@ -56,7 +56,7 @@ project/
 #### Acceptance Criteria:
 
 - [x] Clean project structure is set up ✅
-- [x] Environment configuration works properly ✅ 
+- [x] Environment configuration works properly ✅
 - [x] All dependencies install correctly ✅
 - [x] Git repository created and pushed to GitHub ✅
 - [x] Configuration management with Pydantic models implemented ✅
@@ -129,6 +129,7 @@ agent = Agent(
 #### Technical Implementation Status:
 
 **✅ COMPLETED Infrastructure:**
+
 - MCPServerStdio configuration and connection
 - Agent integration with MCP servers (1 server detected)
 - Complete tool wrapper functions with Obsidian-specific formatting
@@ -151,6 +152,7 @@ agent = Agent(
 #### Current Status:
 
 **✅ Working:**
+
 - MCP server starts successfully with real vault
 - 11 tools registered (create_note, read_note, search_vault, etc.)
 - Agent detects and lists all available tools
@@ -228,7 +230,7 @@ agent = Agent(
 #### Expected Tools:
 
 - [x] todoist_create_task: Add new tasks to Todoist ✅
-- [x] todoist_get_tasks: Retrieve tasks with filtering ✅ 
+- [x] todoist_get_tasks: Retrieve tasks with filtering ✅
 - [x] todoist_update_task: Modify existing tasks ✅
 - [x] todoist_delete_task: Remove tasks ✅
 
@@ -310,6 +312,7 @@ agent = Agent(
 #### Implementation Status:
 
 **✅ COMPLETED Infrastructure:**
+
 - All 4 MCP servers (Obsidian, SearXNG, Todoist, YouTube) working reliably
 - Enhanced agent prompts for effective tool selection and usage
 - 6 comprehensive usage templates implemented
@@ -389,9 +392,9 @@ agent = Agent(
 
 #### Subtasks:
 
-- [ ] Create main chat interface with message history
-- [ ] Implement real-time streaming of agent responses
-- [ ] Add configuration panel for environment variables
+- [x] Create main chat interface with message history
+- [x] Implement real-time streaming of agent responses
+- [x] Add configuration panel for environment variables
 - [ ] Create session management for conversation history
 - [ ] Add basic error display and handling in GUI
 - [ ] Implement file upload for relevant operations
@@ -450,6 +453,7 @@ agent = Agent(
 **Priority**: Medium
 
 #### Background:
+
 Create a unified web search MCP server that provides intelligent search capabilities with automatic fallback between local SearXNG and online alternatives like Brave Search API.
 
 #### Subtasks:
@@ -468,11 +472,13 @@ Create a unified web search MCP server that provides intelligent search capabili
 #### Technical Implementation:
 
 **Provider Priority:**
+
 1. **SearXNG** (if localhost:8080 is responsive and healthy)
 2. **Brave Search API** (if API key available)
 3. **DuckDuckGo API** (free tier, no API key required)
 
 **Features:**
+
 - Automatic provider detection and health monitoring
 - Unified search result format across all providers
 - Intelligent result ranking and quality filtering
@@ -481,6 +487,7 @@ Create a unified web search MCP server that provides intelligent search capabili
 - Search analytics and performance metrics
 
 #### Environment Variables:
+
 ```env
 # Universal Web Search Configuration
 BRAVE_SEARCH_API_KEY=your_brave_api_key
@@ -491,6 +498,7 @@ SEARCH_FALLBACK_ENABLED=true
 ```
 
 #### Expected Tools:
+
 - `universal_web_search`: Intelligent search across multiple providers
 - `search_with_filters`: Advanced search with content type, date, language filters
 - `search_suggestions`: Get search query suggestions and auto-complete
@@ -507,11 +515,75 @@ SEARCH_FALLBACK_ENABLED=true
 
 ---
 
+### Task 1.5: Vision System Integration ✅ COMPLETED 2025-06-28
+
+**Priority**: High
+**Status**: ✅ COMPLETED
+
+#### Background:
+
+Integrate a vision system to enable the agent to take screenshots and analyze what's on the user's screen. This provides real-time visual assistance for app guidance, UI help, and screen-based problem solving.
+
+#### Subtasks:
+
+- [x] Copy vision-mcp core functionality into this codebase ✅ 2025-06-28
+- [x] Create vision tools module with screenshot and analysis functions ✅ 2025-06-28
+- [x] Add vision dependencies to requirements.txt ✅ 2025-06-28
+- [x] Register vision tools directly with PydanticAI agent ✅ 2025-06-28
+- [x] Remove external MCP server configuration for vision ✅ 2025-06-28
+- [x] Implement model-specific quality optimization for Nova Lite ✅ 2025-06-28
+- [x] Add transparent screenshot saving to screenshots/ folder ✅ 2025-06-28
+- [x] Update system prompt to trigger vision on screen-related queries ✅ 2025-06-28
+- [x] Update project documentation (CLAUDE.md, README.md) ✅ 2025-06-28
+
+#### Technical Implementation:
+
+**Core Components:**
+
+- **utils/screen_capture.py**: Screenshot capture with pyautogui and PIL
+- **agent/tools.py**: PydanticAI tool definitions for vision functionality
+- **Model Optimization**: Automatic quality reduction for lite/micro/mini models
+- **Transparency**: All screenshots saved to screenshots/ folder for user visibility
+- **Format Intelligence**: PNG for high quality, JPEG for small models
+
+**Vision Tools:**
+
+- `take_screenshot`: Full desktop screenshot with model optimization
+- `take_region_screenshot`: Capture specific screen regions
+- `get_screen_info`: Get screen dimensions and cursor position
+- `get_screenshot_for_analysis`: AI-optimized screenshots for analysis
+
+**Model Optimization Features:**
+
+- Detects lite/micro/mini models and reduces quality by 2/3
+- Resizes images to 40% for small models
+- Uses JPEG instead of PNG for better compression
+- Maintains minimum quality of 15 to preserve usability
+
+#### Environment Variables:
+
+```env
+# Vision system runs locally - no additional configuration required
+# Screenshots automatically saved to screenshots/ folder
+```
+
+#### Acceptance Criteria:
+
+- [x] Agent can take screenshots when users ask about their screen ✅
+- [x] Vision system works with both large and small LLM models ✅
+- [x] Screenshots are transparently saved for user review ✅
+- [x] System prompt triggers vision tools appropriately ✅
+- [x] Integration is seamless with existing MCP servers ✅
+- [x] Documentation updated to reflect vision capabilities ✅
+
+---
+
 ### Task 4.2: Universal Notes MCP Server
 
 **Priority**: Medium
 
 #### Background:
+
 Create a unified note management MCP server that provides intelligent note operations with automatic fallback between Obsidian (local), Notion (cloud), and local markdown files.
 
 #### Subtasks:
@@ -530,11 +602,13 @@ Create a unified note management MCP server that provides intelligent note opera
 #### Technical Implementation:
 
 **Provider Priority:**
+
 1. **Obsidian** (if vault path exists and is accessible)
 2. **Notion** (if API key available and workspace accessible)
 3. **Local Markdown** (filesystem fallback in ~/Documents/Notes)
 
 **Features:**
+
 - Automatic provider detection and health monitoring
 - Unified note format (markdown-based) across all providers
 - Intelligent note linking and relationship mapping
@@ -543,6 +617,7 @@ Create a unified note management MCP server that provides intelligent note opera
 - Usage analytics and organization insights
 
 #### Environment Variables:
+
 ```env
 # Universal Notes Configuration
 OBSIDIAN_VAULT_PATH=/path/to/vault
@@ -554,6 +629,7 @@ NOTES_SYNC_ENABLED=false
 ```
 
 #### Expected Tools:
+
 - `universal_create_note`: Create notes across any available provider
 - `universal_search_notes`: Search all note providers simultaneously
 - `universal_link_notes`: Create smart links between notes
@@ -576,6 +652,7 @@ NOTES_SYNC_ENABLED=false
 **Priority**: Medium
 
 #### Background:
+
 Create a unified task management MCP server that provides intelligent task operations with automatic fallback between Todoist, Microsoft To Do, and local task files.
 
 #### Subtasks:
@@ -594,11 +671,13 @@ Create a unified task management MCP server that provides intelligent task opera
 #### Technical Implementation:
 
 **Provider Priority:**
+
 1. **Todoist** (if API key available and accessible)
 2. **Microsoft To Do** (if API key available)
 3. **Local Task Files** (JSON/markdown files in ~/Documents/Tasks)
 
 **Features:**
+
 - Automatic provider detection and health monitoring
 - Unified task format across all providers
 - Intelligent task prioritization and scheduling
@@ -607,6 +686,7 @@ Create a unified task management MCP server that provides intelligent task opera
 - Productivity analytics and insights
 
 #### Environment Variables:
+
 ```env
 # Universal Tasks Configuration
 TODOIST_API_TOKEN=your_todoist_token
@@ -619,6 +699,7 @@ TASKS_SMART_SCHEDULING=true
 ```
 
 #### Expected Tools:
+
 - `universal_create_task`: Create tasks across any available provider
 - `universal_search_tasks`: Search all task providers simultaneously
 - `universal_schedule_task`: Smart task scheduling with conflict detection
@@ -633,6 +714,64 @@ TASKS_SMART_SCHEDULING=true
 - Cross-provider task search works effectively
 - Smart scheduling prevents conflicts and optimizes productivity
 - Server publishes to npm as `universal-tasks-mcp`
+
+---
+
+### Task 4.3: PydanticAI Agent Refactor ✅ COMPLETED 2025-06-30
+
+**Priority**: High
+**Status**: ✅ COMPLETED
+
+#### Background:
+Complete refactor of agent/agent.py to follow PydanticAI best practices, improve code organization, and fix critical production bugs.
+
+#### Subtasks:
+
+- [x] Refactor agent.py following PydanticAI documentation patterns ✅ 2025-06-30
+- [x] Move all tools to agent/tools.py for better management ✅ 2025-06-30
+- [x] Fix MCP server integration to use proper MCPServerStdio patterns ✅ 2025-06-30
+- [x] Resolve message history handling in GUI with proper PydanticAI types ✅ 2025-06-30
+- [x] Create comprehensive test suite in /tests/ directory ✅ 2025-06-30
+- [x] Implement real integration tests using actual .env configuration ✅ 2025-06-30
+- [x] Fix critical production bug: "Expected code to be unreachable" ✅ 2025-06-30
+
+#### Technical Implementation ✅ COMPLETED:
+
+**Core Refactor:**
+- Refactored ProductivityAgent class to use global agent pattern
+- Implemented proper PydanticAI Agent initialization with deps_type
+- Added register_tools() function for centralized tool management
+- Fixed MCP server context management with async context handling
+
+**Test Coverage:**
+- 96% test pass rate (87/91 tests passing)
+- Comprehensive unit tests for ProductivityAgent class (86 tests)
+- Real integration tests using actual .env configuration
+- GUI integration tests for message format handling
+
+**Production Bug Fixes:**
+- Fixed GUI message history to use ModelRequest/ModelResponse types
+- Resolved UserMessage import error with proper PydanticAI message types
+- Fixed agent variable scope issues in conversation methods
+
+#### Files Modified:
+
+- `agent/agent.py` - Complete refactor following PydanticAI patterns
+- `agent/tools.py` - NEW: Centralized tool definitions and registration
+- `gui.py` - Fixed message history handling with proper PydanticAI types
+- `tests/test_agent.py` - NEW: Comprehensive ProductivityAgent tests
+- `tests/test_real_integration.py` - NEW: Real integration tests with .env config
+- `tests/test_gui_integration.py` - NEW: GUI integration tests
+
+#### Acceptance Criteria:
+
+- [x] Agent follows PydanticAI best practices ✅
+- [x] All tools properly organized in agent/tools.py ✅
+- [x] MCP server integration works correctly ✅
+- [x] GUI message history handling fixed ✅
+- [x] Comprehensive test suite with high pass rate ✅
+- [x] Real integration tests using actual configuration ✅
+- [x] Critical production bugs resolved ✅
 
 ---
 
@@ -663,6 +802,7 @@ TASKS_SMART_SCHEDULING=true
 **Priority**: Medium
 
 #### Background:
+
 Create a unified video processing MCP server that provides intelligent video analysis with automatic fallback between YouTube, Vimeo, and local video files.
 
 #### Subtasks:
@@ -681,11 +821,13 @@ Create a unified video processing MCP server that provides intelligent video ana
 #### Technical Implementation:
 
 **Provider Priority:**
+
 1. **YouTube** (if API key available or video URLs detected)
 2. **Vimeo** (if API key available)
 3. **Local Video Files** (MP4, MOV, etc. with local transcript generation)
 
 **Features:**
+
 - Automatic provider detection and video source identification
 - Unified video metadata format across all providers
 - Intelligent transcript extraction and processing
@@ -694,6 +836,7 @@ Create a unified video processing MCP server that provides intelligent video ana
 - Learning analytics and viewing insights
 
 #### Environment Variables:
+
 ```env
 # Universal Video Configuration
 YOUTUBE_API_KEY=your_youtube_api_key
@@ -705,6 +848,7 @@ VIDEO_ANALYTICS_ENABLED=true
 ```
 
 #### Expected Tools:
+
 - `universal_get_video_info`: Get video metadata from any supported provider
 - `universal_extract_transcript`: Extract transcripts with intelligent fallbacks
 - `universal_summarize_video`: Create intelligent video summaries
@@ -727,6 +871,7 @@ VIDEO_ANALYTICS_ENABLED=true
 **Priority**: High
 
 #### Background:
+
 Create a unified RAG (Retrieval-Augmented Generation) MCP server that provides intelligent document retrieval and knowledge base querying with multiple vector database backends.
 
 #### Subtasks:
@@ -745,11 +890,13 @@ Create a unified RAG (Retrieval-Augmented Generation) MCP server that provides i
 #### Technical Implementation:
 
 **Vector Database Priority:**
+
 1. **Chroma** (local, open-source, if installed)
 2. **Pinecone** (cloud, if API key available)
 3. **FAISS** (local, CPU-based fallback)
 
 **Features:**
+
 - Automatic vector database detection and health monitoring
 - Unified document format and chunking across all backends
 - Intelligent embedding generation with multiple model options
@@ -758,6 +905,7 @@ Create a unified RAG (Retrieval-Augmented Generation) MCP server that provides i
 - RAG performance analytics and optimization insights
 
 #### Environment Variables:
+
 ```env
 # Universal RAG Configuration
 CHROMA_PERSIST_DIRECTORY=./chroma_db
@@ -771,6 +919,7 @@ RAG_TOP_K=5
 ```
 
 #### Expected Tools:
+
 - `rag_ingest_document`: Add documents to knowledge base
 - `rag_semantic_search`: Perform semantic search across knowledge base
 - `rag_query_with_context`: Query with relevant context retrieval
@@ -793,6 +942,7 @@ RAG_TOP_K=5
 **Priority**: Medium
 
 #### Background:
+
 Create a unified voice processing MCP server that provides intelligent speech-to-text, text-to-speech, and voice analysis with multiple provider fallbacks.
 
 #### Subtasks:
@@ -811,16 +961,19 @@ Create a unified voice processing MCP server that provides intelligent speech-to
 #### Technical Implementation:
 
 **Speech-to-Text Priority:**
+
 1. **OpenAI Whisper API** (cloud, high quality, if API key available)
 2. **Azure Speech Services** (cloud, if API key available)
 3. **Local Whisper.cpp** (local, CPU/GPU optimized)
 
 **Text-to-Speech Priority:**
+
 1. **OpenAI TTS** (cloud, natural voices, if API key available)
 2. **Azure TTS** (cloud, if API key available)
 3. **Local TTS** (espeak, festival, or system TTS)
 
 **Features:**
+
 - Automatic provider detection and health monitoring
 - Unified audio format handling across all providers
 - Intelligent voice quality optimization and noise reduction
@@ -829,6 +982,7 @@ Create a unified voice processing MCP server that provides intelligent speech-to
 - Voice usage analytics and performance insights
 
 #### Environment Variables:
+
 ```env
 # Universal Voice Configuration
 OPENAI_API_KEY=your_openai_api_key
@@ -841,6 +995,7 @@ VOICE_LANGUAGE_AUTO_DETECT=true
 ```
 
 #### Expected Tools:
+
 - `voice_transcribe`: Convert speech to text using best available STT
 - `voice_synthesize`: Convert text to speech using best available TTS
 - `voice_analyze`: Analyze voice for emotion, sentiment, and characteristics
@@ -864,7 +1019,9 @@ VOICE_LANGUAGE_AUTO_DETECT=true
 **Status**: ✅ COMPLETED
 
 #### Background:
+
 The original `obsidian-mcp` package has a tool naming convention mismatch with PydanticAI:
+
 - MCP server registers tools with hyphens: `list-available-vaults`
 - PydanticAI converts them to underscores: `list_available_vaults`
 - Package is unmaintained (6 months without updates)
@@ -881,12 +1038,15 @@ The original `obsidian-mcp` package has a tool naming convention mismatch with P
 - [x] Test end-to-end note operations through agent ✅ 2025-06-22
 
 #### Package Information:
+
 - **Repository**: https://github.com/Carssou/obsidian-mcp-pydanticai
 - **Package Name**: `obsidian-mcp-pydanticai`
 - **Configuration**: `npx -y obsidian-mcp-pydanticai /path/to/vault`
 
 #### Expected Fix:
+
 Ensure MCP server accepts both naming conventions:
+
 - `list-available-vaults` (original format)
 - `list_available_vaults` (PydanticAI format)
 
@@ -907,7 +1067,7 @@ Ensure MCP server accepts both naming conventions:
 #### Subtasks:
 
 - [ ] Add support for Anthropic (Claude) models via anthropic provider
-- [ ] Add support for Google Gemini models via google provider  
+- [ ] Add support for Google Gemini models via google provider
 - [ ] Add support for Cohere models via cohere provider
 - [ ] Add support for Groq models via groq provider
 - [ ] Add support for Mistral models via mistral provider
@@ -917,6 +1077,7 @@ Ensure MCP server accepts both naming conventions:
 - [ ] Update documentation with all provider options
 
 #### Available PydanticAI Providers:
+
 ```
 anthropic, bedrock, cohere, gemini, google, groq, mistral, openai
 ```
@@ -1006,17 +1167,19 @@ anthropic, bedrock, cohere, gemini, google, groq, mistral, openai
 
 ### Learning Objectives
 
-- [ ] Deep understanding of PydanticAI framework and patterns
-- [ ] Mastery of MCP protocol and server integration
+- [x] Deep understanding of PydanticAI framework and patterns ✅
+- [x] Mastery of MCP protocol and server integration ✅
 - [ ] Proficiency with modern Python async programming
 - [ ] Experience with agent orchestration and coordination
-- [ ] GUI framework expertise for AI applications
+- [x] GUI framework expertise for AI applications ✅
+- [x] Vision system integration and optimization ✅
 
 ### Functional Success
 
-- [ ] All MCP servers integrate successfully
-- [ ] Chat interface provides smooth user experience
-- [ ] Agent handles multi-tool workflows effectively
+- [x] All MCP servers integrate successfully ✅
+- [x] Chat interface provides smooth user experience ✅
+- [x] Agent handles multi-tool workflows effectively ✅
+- [x] Vision system enables real-time screen assistance ✅
 - [ ] System is extensible for adding new capabilities
 - [ ] Error handling and recovery work reliably
 

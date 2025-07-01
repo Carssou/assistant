@@ -27,6 +27,11 @@ def create_obsidian_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
         return None
     
     vault_path = config.obsidian_vault_path
+    
+    # Skip validation for placeholder paths
+    if str(vault_path) == "/path/to/your/vault":
+        return None
+        
     if not vault_path.exists():
         raise ValueError(f"Obsidian vault path does not exist: {vault_path}")
     

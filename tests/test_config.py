@@ -24,7 +24,7 @@ class TestAgentConfig:
             assert config.llm_choice == "claude-3-5-sonnet"
             assert config.aws_region == "us-east-1"
             assert config.log_level == "INFO"
-            assert config.debug_mode is False
+            assert config.debug_mode is True
             assert config.gui_port == 7860
             assert config.gui_share is False
     

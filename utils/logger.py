@@ -75,10 +75,23 @@ def setup_logging(
         except Exception as e:
             logging.warning(f"Failed to initialize Langfuse: {e}")
     
-    # Suppress noisy loggers in production
-    if not debug_mode:
-        logging.getLogger("httpx").setLevel(logging.WARNING)
-        logging.getLogger("httpcore").setLevel(logging.WARNING)
+    # Enable HTTP request/response logging for API calls
+    if debug_mode:
+        logging.getLogger("httpx").setLevel(logging.DEBUG)
+        logging.getLogger("httpcore").setLevel(logging.DEBUG)
+        logging.getLogger("botocore").setLevel(logging.DEBUG)
+        logging.getLogger("botocore.httpsession").setLevel(logging.DEBUG)
+        logging.getLogger("botocore.endpoint").setLevel(logging.DEBUG)
+        logging.getLogger("boto3").setLevel(logging.DEBUG)
+        logging.getLogger("urllib3").setLevel(logging.DEBUG)
+        logging.getLogger("urllib3.connectionpool").setLevel(logging.DEBUG)
+    else:
+        # Still show HTTP traffic but suppress other noise
+        logging.getLogger("httpx").setLevel(logging.DEBUG)
+        logging.getLogger("httpcore").setLevel(logging.DEBUG)
+        logging.getLogger("botocore").setLevel(logging.DEBUG)
+        logging.getLogger("botocore.httpsession").setLevel(logging.DEBUG)
+        logging.getLogger("botocore.endpoint").setLevel(logging.DEBUG)
         logging.getLogger("gradio").setLevel(logging.WARNING)
         logging.getLogger("uvicorn").setLevel(logging.WARNING)
     

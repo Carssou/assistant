@@ -1,26 +1,33 @@
 """
 Main PydanticAI agent implementation.
 
-This module contains the core agent setup and initialization.
+This module contains the core agent setup following PydanticAI best practices.
 """
 
 import asyncio
-from typing import Optional
+from typing import Optional, AsyncGenerator
 
 from pydantic_ai import Agent
+from pydantic_ai.agent import AgentRunResult
+from pydantic_ai.messages import ModelMessage
 
 from agent.dependencies import AgentDependencies
 from agent.prompts import get_system_prompt
+from agent.tools import register_tools
 from config.settings import AgentConfig, create_model_instance
 from mcp_servers.configs import create_all_mcp_servers
 
 
+# Global agent instance - will be configured during initialization
+agent: Agent[AgentDependencies] = None
+
+
 class ProductivityAgent:
     """
-    Main productivity agent class.
+    Wrapper class for the PydanticAI agent with productivity tools.
     
-    This class encapsulates the PydanticAI agent with all its
-    dependencies and configuration.
+    This class manages the agent lifecycle and provides convenience methods
+    while following PydanticAI best practices.
     """
     
     def __init__(self, dependencies: AgentDependencies):
@@ -34,38 +41,46 @@ class ProductivityAgent:
         self.config = dependencies.config
         self.logger = dependencies.logger
         
-        # Create the model instance
-        self.model = create_model_instance(self.config)
+        # Set up the agent with the model and MCP servers
+        self._setup_agent()
+        
+        self.logger.info(f"Productivity agent initialized with {self.config.llm_provider} provider")
+    
+    def _setup_agent(self):
+        """Set up the agent with model and MCP servers."""
+        global agent
+        
+        # Create model instance
+        model = create_model_instance(self.config)
         
         # Create MCP servers
-        self.mcp_servers = create_all_mcp_servers(self.config)
+        mcp_servers = create_all_mcp_servers(self.config)
         
-        # Create the PydanticAI agent
-        self.agent = Agent(
-            model=self.model,
+        # Create the agent with proper MCP server integration
+        agent = Agent(
+            model=model,
             deps_type=AgentDependencies,
-            system_prompt=get_system_prompt(),  # Get fresh date/time
-            mcp_servers=self.mcp_servers,
+            system_prompt=get_system_prompt(),
+            mcp_servers=mcp_servers,
             retries=2
         )
         
-        # Track conversation history for context
-        self.conversation_history = []
+        # Register additional tools with the agent
+        register_tools(agent)
         
-        self.logger.info(f"Productivity agent initialized with {self.config.llm_provider} provider and {len(self.mcp_servers)} MCP servers")
+        self.logger.info(f"Agent configured with {len(mcp_servers)} MCP servers")
     
-    async def run_conversation(self, message: str) -> str:
+    async def run_conversation(self, message: str, message_history: Optional[list[ModelMessage]] = None) -> str:
         """
         Run a single conversation turn.
         
         Args:
             message: User message
+            message_history: Optional message history from previous conversations
             
         Returns:
             Agent response
         """
-        # Create Langfuse trace if client is available
-        trace = None
         generation = None
         if self.deps.langfuse_client:
             trace_id = self.deps.langfuse_client.create_trace_id()
@@ -80,31 +95,39 @@ class ProductivityAgent:
             )
         
         try:
-            # Run with MCP servers if available
-            if self.mcp_servers:
-                async with self.agent.run_mcp_servers():
-                    result = await self.agent.run(message, deps=self.deps)
-                    response = result.output
+            result = None
+            # Run with MCP servers in proper context
+            # Check if agent has MCP servers using the private attribute
+            if hasattr(agent, '_mcp_servers') and agent._mcp_servers:
+                async with agent.run_mcp_servers():
+                    result = await agent.run(
+                        message, 
+                        deps=self.deps,
+                        message_history=message_history
+                    )
             else:
-                result = await self.agent.run(message, deps=self.deps)
-                response = result.output
+                result = await agent.run(
+                    message, 
+                    deps=self.deps,
+                    message_history=message_history
+                )
             
-            # Log successful completion to Langfuse
+            response = result.output
+            
+            # Log API usage
+            self._log_conversation(message, result)
+            
+            # Log success to Langfuse
             if generation:
                 generation.update(output=response)
                 generation.end()
             
             return response
+            
         except Exception as e:
-            # Log detailed error information
             import traceback
             self.logger.error(f"Error in conversation: {e}")
-            self.logger.error(f"Error type: {type(e).__name__}")
             self.logger.error(f"Full traceback: {traceback.format_exc()}")
-            
-            # Check if it's a validation error and extract more details
-            if hasattr(e, 'errors'):
-                self.logger.error(f"Validation errors: {e.errors()}")
             
             error_msg = f"I encountered an error: {str(e)}"
             
@@ -115,126 +138,74 @@ class ProductivityAgent:
             
             return error_msg
     
-    async def stream_conversation(self, message: str):
-        """
-        Stream a conversation response.
+    def _log_conversation(self, message: str, result: AgentRunResult):
+        """Log conversation details."""
+        response = result.output
+
+        print(f"[API REQUEST] Message: {message}")
         
-        Args:
-            message: User message
-            
-        Yields:
-            Response chunks as they arrive
-        """
-        # Create Langfuse trace if client is available
-        generation = None
-        if self.deps.langfuse_client:
-            trace_id = self.deps.langfuse_client.create_trace_id()
-            generation = self.deps.langfuse_client.start_generation(
-                name="agent_streaming_conversation",
-                input=message,
-                model=self.config.llm_choice,
-                metadata={
-                    "llm_provider": str(self.config.llm_provider),
-                    "streaming": True,
-                    "trace_id": trace_id
-                }
-            )
-        
-        response_chunks = []
-        
-        # First, try to get the complete response using non-streaming method
-        # This avoids the MCP cancel scope issues with streaming
-        try:
-            if self.mcp_servers:
-                async with self.agent.run_mcp_servers():
-                    result = await self.agent.run(
-                        message, 
-                        deps=self.deps,
-                        message_history=self.conversation_history
-                    )
-                    full_response = result.output
-            else:
-                result = await self.agent.run(
-                    message, 
-                    deps=self.deps,
-                    message_history=self.conversation_history
-                )
-                full_response = result.output
-            
-            # Update conversation history with new messages
-            self.conversation_history.extend(result.new_messages())
-            
-            # Now simulate streaming by yielding the response progressively
-            words = full_response.split()
-            current_response = ""
-            
-            for word in words:
-                current_response += word + " "
-                yield current_response.strip()
-                # Small delay to simulate streaming
-                await asyncio.sleep(0.01)
-                
-        except Exception as e:
-            error_str = str(e).lower()
-            if "cancel scope" in error_str or "different task" in error_str:
-                self.logger.warning(f"MCP context warning, trying fallback: {e}")
-                # Fallback: try without MCP servers
-                try:
-                    result = await self.agent.run(
-                        message, 
-                        deps=self.deps,
-                        message_history=self.conversation_history
-                    )
-                    full_response = result.output
-                    
-                    # Update conversation history with new messages
-                    self.conversation_history.extend(result.new_messages())
-                    
-                    # Simulate streaming for fallback response
-                    words = full_response.split()
-                    current_response = ""
-                    
-                    for word in words:
-                        current_response += word + " "
-                        yield current_response.strip()
-                        await asyncio.sleep(0.01)
+        # Log tool calls
+        for msg in result.new_messages():
+            if hasattr(msg, 'tool_calls') and msg.tool_calls:
+                for tool_call in msg.tool_calls:
+                    normal_tools = ['take_screenshot', 'take_region_screenshot', 'get_screen_info']
+                    if tool_call.tool_name in normal_tools:
+                        print(f"[NORMAL TOOL] {tool_call.tool_name} called with: {tool_call.args}")
+                    else:
+                        print(f"[MCP TOOL] {tool_call.tool_name} called with: {tool_call.args}")
                         
-                except Exception as fallback_e:
-                    self.logger.error(f"Fallback also failed: {fallback_e}")
-                    yield f"Error: {str(fallback_e)}"
-            else:
-                # Re-raise non-MCP errors
-                raise
-            
-        except Exception as e:
-            self.logger.error(f"Error in streaming conversation: {e}")
-            error_msg = f"Error: {str(e)}"
-            
-            # Log error to Langfuse
-            if generation:
-                generation.update(output=error_msg, level="ERROR")
-                generation.end()
-            
-            yield error_msg
-        
-        # Log complete response to Langfuse
-        if generation and 'full_response' in locals():
-            generation.update(output=full_response)
-            generation.end()
+            # Log tool results
+            if hasattr(msg, 'content') and msg.content and len(str(msg.content)) > 100:
+                print(f"[TOOL RESULT] {str(msg.content)[:200]}...")
     
-    def get_conversation_history(self):
+    async def list_available_tools(self) -> dict:
         """
-        Get conversation history if available.
+        List all available tools from MCP servers.
         
         Returns:
-            Conversation history or empty list
+            Dictionary of server names and their available tools
         """
-        # TODO: Implement conversation history storage
+        tools_info = {}
+        
+        if not hasattr(agent, '_mcp_servers') or not agent._mcp_servers:
+            return {"message": "No MCP servers configured"}
+        
+        for i, server in enumerate(agent._mcp_servers):
+            server_name = f"server_{i}"
+            try:
+                tools_info[server_name] = {
+                    "command": server.command,
+                    "args": server.args,
+                    "status": "configured"
+                }
+            except Exception as e:
+                tools_info[server_name] = {
+                    "command": server.command,
+                    "args": server.args,
+                    "status": f"error: {e}"
+                }
+        
+        return tools_info
+    
+    @property
+    def mcp_servers(self):
+        """Get MCP servers from the underlying agent."""
+        if hasattr(agent, '_mcp_servers'):
+            return agent._mcp_servers
         return []
+    
+    def has_mcp_servers(self) -> bool:
+        """Check if the agent has MCP servers configured."""
+        return hasattr(agent, '_mcp_servers') and bool(agent._mcp_servers)
+    
+    def disable_mcp_servers(self):
+        """Disable MCP servers by clearing the list."""
+        global agent
+        if hasattr(agent, '_mcp_servers'):
+            agent._mcp_servers = []
     
     async def close(self):
         """Clean up agent resources."""
-        # Flush Langfuse data before closing
         if self.deps.langfuse_client:
             self.deps.langfuse_client.flush()
         await self.deps.close()
@@ -260,31 +231,6 @@ async def create_agent(config: Optional[AgentConfig] = None) -> ProductivityAgen
     deps = await create_agent_dependencies(config)
     
     # Create agent
-    agent = ProductivityAgent(deps)
+    productivity_agent = ProductivityAgent(deps)
     
-    return agent
-
-
-def create_sync_agent(config: Optional[AgentConfig] = None) -> ProductivityAgent:
-    """
-    Create agent synchronously (for testing).
-    
-    Args:
-        config: Agent configuration (optional)
-        
-    Returns:
-        Productivity agent (note: some features may not work in sync mode)
-    """
-    from agent.dependencies import create_sync_dependencies
-    from config.settings import load_config
-    
-    if config is None:
-        config = load_config()
-    
-    # Create dependencies synchronously
-    deps = create_sync_dependencies(config)
-    
-    # Create agent
-    agent = ProductivityAgent(deps)
-    
-    return agent
+    return productivity_agent

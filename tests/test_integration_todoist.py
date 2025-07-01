@@ -9,7 +9,7 @@ import pytest
 import asyncio
 import os
 
-from agent.agent import ProductivityAgent
+from agent.agent import ProductivityAgent, create_agent
 from config.settings import load_config
 
 
@@ -24,22 +24,22 @@ async def test_todoist_mcp_server_integration():
         pytest.skip("TODOIST_API_TOKEN not configured")
     
     # Create agent instance
-    agent = ProductivityAgent(config)
-    await agent.initialize()
+    agent = await create_agent(config)
     
     # Test that MCP servers include Todoist if configured
-    assert len(agent.mcp_servers) >= 1, "At least one MCP server should be configured"
+    assert agent.has_mcp_servers(), "At least one MCP server should be configured"
     
     # Test that agent can start with MCP servers
     try:
-        async with agent.agent.run_mcp_servers():
+        from agent.agent import agent as global_agent
+        async with global_agent.run_mcp_servers():
             # If we get here, the MCP server started successfully
             assert True, "MCP server started and agent can communicate with it"
     except Exception as e:
         pytest.fail(f"Failed to start MCP servers: {e}")
     
     # Clean up
-    await agent.cleanup()
+    await agent.close()
 
 
 @pytest.mark.asyncio 
@@ -52,13 +52,13 @@ async def test_todoist_tools_available():
     if not config.todoist_api_token:
         pytest.skip("TODOIST_API_TOKEN not configured")
     
-    agent = ProductivityAgent(config)
-    await agent.initialize()
+    agent = await create_agent(config)
     
     try:
-        async with agent.agent.run_mcp_servers():
+        from agent.agent import agent as global_agent
+        async with global_agent.run_mcp_servers():
             # Test a simple query that should list available tools
-            result = await agent.query("What tools do you have available?")
+            result = await agent.run_conversation("What tools do you have available?")
             
             # The result should mention task-related capabilities
             result_text = str(result)
@@ -81,7 +81,7 @@ async def test_todoist_tools_available():
         # Just log the issue
         print(f"Todoist MCP server test failed (may be configuration issue): {e}")
     
-    await agent.cleanup()
+    await agent.close()
 
 
 if __name__ == "__main__":

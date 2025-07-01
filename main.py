@@ -26,6 +26,13 @@ async def run_interactive_session():
         agent = await create_agent(config)
         
         print(f"✅ Agent initialized with {config.llm_provider} provider")
+        
+        # Debug: Show loaded MCP servers
+        tools_info = await agent.list_available_tools()
+        print(f"🔧 Loaded {len(tools_info)} MCP servers:")
+        for server_name, info in tools_info.items():
+            print(f"  - {server_name}: {info['command']} {' '.join(info['args'])} ({info['status']})")
+        
         print("Ready to help with your productivity tasks!\n")
         
         while True:

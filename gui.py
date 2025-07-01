@@ -25,6 +25,7 @@ class AgentGUI:
         self.agent: Optional[ProductivityAgent] = None
         self.config: Optional[AgentConfig] = None
         self.conversation_history: List[Tuple[str, str]] = []
+        self.mcp_context_active = False
         
     async def initialize_agent(self) -> bool:
         """
@@ -45,54 +46,56 @@ class AgentGUI:
         self, 
         message: str, 
         history: List
-    ) -> AsyncGenerator[List, None]:
+    ) -> List:
         """
-        Generate streaming chat response with MCP error handling.
+        Generate complete chat response with MCP error handling.
         
         Args:
             message: User message
             history: Conversation history
             
-        Yields:
-            Updated history with streaming response
+        Returns:
+            Updated history with complete response
         """
         if not self.agent:
             history.append({"role": "assistant", "content": "Error: Agent not initialized. Please check configuration."})
-            yield history
-            return
+            return history
         
         if not message.strip():
             history.append({"role": "assistant", "content": "Please enter a message."})
-            yield history
-            return
-        
-        # Add empty assistant message that we'll update
-        history.append({"role": "assistant", "content": ""})
+            return history
         
         try:
-            # Stream from agent with MCP error handling
-            async for chunk in self.agent.stream_conversation(message):
-                history[-1]["content"] = chunk
-                yield history
+            # Convert GUI history to PydanticAI ModelMessage format
+            from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart
+            
+            chat_history = []
+            for msg in history:
+                if msg["role"] == "user":
+                    chat_history.append(ModelRequest(parts=[UserPromptPart(content=msg["content"])]))
+                elif msg["role"] == "assistant":
+                    chat_history.append(ModelResponse(parts=[TextPart(content=msg["content"])]))
+            
+            # Get complete response from agent with full conversation history
+            response = await self.agent.run_conversation(message, chat_history)
+            
+            history.append({"role": "assistant", "content": response})
             
             # Log final complete response
-            print(f"\n[FINAL RESPONSE]:\n{history[-1]['content']}\n{'='*50}")
+            print(f"\n[FINAL RESPONSE]:\n{response}\n{'='*50}")
+            return history
+            
         except Exception as e:
             # Handle MCP cancel scope errors gracefully
             error_str = str(e).lower()
             if "cancel scope" in error_str or "different task" in error_str:
                 # Log but don't fail - this is a known MCP threading issue
                 print(f"MCP context warning (continuing normally): {e}")
-                # If we got some content before the error, keep it
-                if history[-1]["content"]:
-                    yield history
-                else:
-                    history[-1]["content"] = "Response completed (MCP context warning)"
-                    yield history
+                history.append({"role": "assistant", "content": "Response completed (MCP context warning)"})
             else:
                 # Other errors should be shown to user
-                history[-1]["content"] = f"Error: {str(e)}"
-                yield history
+                history.append({"role": "assistant", "content": f"Error: {str(e)}"})
+            return history
     
     def _get_vault_name(self) -> str:
         """Extract vault name from full path."""
@@ -250,7 +253,7 @@ class AgentGUI:
             # State for message passing
             msg_state = gr.State("")
             
-            # Streaming event handlers
+            # Event handlers
             def add_user_message(message, history):
                 """Add user message to history."""
                 if not message.strip():
@@ -258,31 +261,33 @@ class AgentGUI:
                 history = history + [{"role": "user", "content": message}]
                 return "", history, message  # Return message as third output
             
-            def stream_response(message, history):
-                """Stream agent response."""
+            def get_response(message, history):
+                """Get complete agent response."""
+                import logging
+                logging.info(f"GUI get_response called with message: {message}")
+                
                 if not message.strip():
                     return history
                 
-                # Create async event loop for streaming
+                # Create async event loop for response
                 import asyncio
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 
                 try:
-                    # Create async generator
-                    async_gen = self.chat_response(message, history)
-                    
-                    # Stream the response
-                    while True:
-                        try:
-                            updated_history = loop.run_until_complete(async_gen.__anext__())
-                            yield updated_history
-                        except StopAsyncIteration:
-                            break
-                        except Exception as e:
-                            # Log unexpected errors but don't break streaming
-                            print(f"Streaming error: {e}")
-                            break
+                    logging.info(f"GUI about to call self.chat_response")
+                    # Get complete response
+                    updated_history = loop.run_until_complete(self.chat_response(message, history))
+                    logging.info(f"GUI chat_response completed")
+                    return updated_history
+                except Exception as e:
+                    # Log unexpected errors
+                    print(f"[GUI EVENT] Response error: {e}")
+                    logging.error(f"GUI response error: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    history.append({"role": "assistant", "content": f"Error: {str(e)}"})
+                    return history
                 finally:
                     loop.close()
             
@@ -297,14 +302,14 @@ class AgentGUI:
                 status = "🟢 **Agent**: Ready" if self.agent else "🔴 **Agent**: Failed to initialize"
                 return self.get_config_info(), status
             
-            # Streaming event connections
+            # Event connections
             submit.click(
                 add_user_message,
                 inputs=[msg, chatbot],
                 outputs=[msg, chatbot, msg_state],
                 queue=False
             ).then(
-                stream_response,
+                get_response,
                 inputs=[msg_state, chatbot],
                 outputs=chatbot,
                 queue=True
@@ -316,7 +321,7 @@ class AgentGUI:
                 outputs=[msg, chatbot, msg_state],
                 queue=False
             ).then(
-                stream_response,
+                get_response,
                 inputs=[msg_state, chatbot],
                 outputs=chatbot,
                 queue=True
@@ -356,25 +361,60 @@ async def main():
         print("✅ Agent initialized successfully")
         print(f"🔧 Provider: {gui.config.llm_provider}")
         print(f"🧠 Model: {gui.config.llm_choice}")
+        
+        # Start persistent MCP context if MCP servers exist
+        if gui.agent.has_mcp_servers():
+            print("🔗 Starting persistent MCP servers...")
+            try:
+                from agent.agent import agent
+                async with agent.run_mcp_servers():
+                    print("✅ MCP servers started successfully")
+                    gui.mcp_context_active = True
+                    
+                    # Create and launch interface
+                    interface = gui.create_interface()
+                    
+                    print("🌐 Launching web interface...")
+                    print("💡 Open your browser to interact with the agent")
+                    
+                    # Launch with appropriate settings
+                    interface.launch(
+                        server_name="localhost",
+                        server_port=7860,
+                        share=False,
+                        debug=gui.config.debug_mode if gui.config else False,
+                        show_error=True,
+                        quiet=False
+                    )
+            except Exception as e:
+                print(f"⚠️  MCP servers failed to start: {e}")
+                print("Running without MCP servers...")
+                gui.agent.disable_mcp_servers()  # Disable MCP servers
+                
+                # Create and launch interface
+                interface = gui.create_interface()
+                interface.launch(
+                    server_name="localhost",
+                    server_port=7860,
+                    share=False,
+                    debug=gui.config.debug_mode if gui.config else False,
+                    show_error=True,
+                    quiet=False
+                )
+        else:
+            # No MCP servers
+            interface = gui.create_interface()
+            interface.launch(
+                server_name="localhost",
+                server_port=7860,
+                share=False,
+                debug=gui.config.debug_mode if gui.config else False,
+                show_error=True,
+                quiet=False
+            )
     else:
         print("⚠️  Agent initialization failed - check your configuration")
         print("The GUI will still start, but functionality may be limited")
-    
-    # Create and launch interface
-    interface = gui.create_interface()
-    
-    print("🌐 Launching web interface...")
-    print("💡 Open your browser to interact with the agent")
-    
-    # Launch with appropriate settings
-    interface.launch(
-        server_name="0.0.0.0",
-        server_port=7862,
-        share=False,
-        debug=gui.config.debug_mode if gui.config else False,
-        show_error=True,
-        quiet=False
-    )
 
 
 if __name__ == "__main__":

@@ -162,4 +162,7 @@ local_config.py
 
 # SearXNG auto-generated files
 searxng/uwsgi.ini
+
+# Screenshots - user privacy protection
+screenshots/
  
