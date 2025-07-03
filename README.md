@@ -12,7 +12,7 @@ A PydanticAI-powered agent with integrated MCP servers for productivity tasks. T
 - **🔧 MCP Server Integration**: 4 reliable MCP servers with health monitoring
 - **🛡️ Error Handling**: Graceful degradation when tools are unavailable
 - **⚡ Performance**: Tool operations complete quickly with proper error recovery
-- **🌐 Web Interface**: Gradio GUI with streaming responses and session memory
+- **🌐 Web Interface**: Gradio GUI with session memory and conversation history
 
 ## Requirements
 
@@ -117,8 +117,9 @@ See [Usage Examples Documentation](docs/usage_examples.md) for more details.
 
 ### LLM Providers
 
-- **AWS Bedrock** (preferred): Configure AWS credentials and region
-- **OpenAI**: Set API key for fallback option
+- **AWS Bedrock**: Configure AWS credentials and region for Amazon Nova, Claude (gated), LLaMA, and other models
+- **Anthropic Direct**: Direct Claude API access (no AWS account needed)
+- **OpenAI**: GPT models with API key
 
 ### MCP Servers
 

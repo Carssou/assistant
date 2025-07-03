@@ -9,12 +9,12 @@ This is a PydanticAI-powered agent with integrated MCP servers for productivity 
 ## Architecture
 
 ### Core Components
-- **Agent**: PydanticAI agent with MCP server integration and configurable LLM providers (AWS Bedrock preferred, OpenAI fallback) ✅ REFACTORED
+- **Agent**: PydanticAI agent with MCP server integration and configurable LLM providers (AWS Bedrock, Anthropic Direct, OpenAI) ✅ REFACTORED
 - **MCP Servers**: 4 integrated stdio-based servers (Obsidian, SearXNG, Todoist, YouTube) with health monitoring
 - **Vision System**: Integrated screenshot capture and visual analysis with model-optimized compression
 - **Dependencies**: Async HTTP client, Langfuse observability, and configuration management
 - **Error Handling**: Graceful degradation when tools/servers are unavailable
-- **GUI**: Gradio chat interface with streaming responses and session memory ✅ COMPLETED
+- **GUI**: Gradio chat interface with session memory and conversation history ✅ COMPLETED
 
 ### Project Structure
 ```
@@ -53,9 +53,9 @@ project/
 ### Environment Variables
 ```env
 # LLM Configuration
-LLM_PROVIDER=aws|openai
+LLM_PROVIDER=aws|anthropic|openai
 LLM_API_KEY=your_api_key_here
-LLM_CHOICE=claude-3-5-sonnet|gpt-4o
+LLM_CHOICE=claude-3-5-sonnet-20241022|gpt-4o|amazon.nova-lite-v1:0
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
@@ -131,12 +131,13 @@ class AgentDependencies:
 - **Performance**: Multi-tool tasks complete in 15-30 seconds
 
 #### Gradio Web Interface
-- **Streaming Responses**: Real-time progressive text streaming with proper formatting
+- **System Prompt Integration**: Fixed critical bug where system prompts weren't included with message history
 - **Session Memory**: Maintains conversation context using PydanticAI's native history
 - **Responsive Layout**: Full-width design that adapts to screen size
 - **MCP Compatibility**: Handles MCP cancel scope errors gracefully
 - **Configuration Display**: Shows current LLM provider, model, and vault info
 - **Error Resilience**: Continues functioning when individual tools fail
+- **Multi-Model Support**: Works correctly with all LLM providers (AWS, Anthropic, OpenAI)
 
 ### Example Usage Patterns
 - **Research & Note**: "Research AI agents and create comprehensive notes" → Web search → Note creation → Optional tasks
