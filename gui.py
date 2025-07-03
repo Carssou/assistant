@@ -67,9 +67,17 @@ class AgentGUI:
         
         try:
             # Convert GUI history to PydanticAI ModelMessage format
-            from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart
+            from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart, SystemPromptPart
+            from agent.prompts import get_system_prompt
             
             chat_history = []
+            
+            # CRITICAL: Add system prompt at the start of history if history exists
+            # PydanticAI doesn't auto-include system prompt when message_history is provided
+            if history:
+                system_prompt = get_system_prompt()
+                chat_history.append(ModelRequest(parts=[SystemPromptPart(content=system_prompt)]))
+            
             for msg in history:
                 if msg["role"] == "user":
                     chat_history.append(ModelRequest(parts=[UserPromptPart(content=msg["content"])]))
