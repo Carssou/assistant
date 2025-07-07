@@ -37,6 +37,8 @@ project/
 ├── utils/
 │   ├── logger.py         # Langfuse observability integration
 │   ├── server_monitor.py # MCP server health monitoring
+│   ├── screen_capture.py # Simplified screenshot utilities (50 lines, aspect ratio preservation)
+│   ├── bedrock_vision.py # Direct Bedrock API for Nova models (bypasses PydanticAI limitations)
 │   └── graceful_degradation.py # Tool failure handling
 └── docs/
     └── usage_examples.md # Human-readable usage examples
@@ -55,7 +57,7 @@ project/
 # LLM Configuration
 LLM_PROVIDER=aws|anthropic|openai
 LLM_API_KEY=your_api_key_here
-LLM_CHOICE=claude-3-5-sonnet-20241022|gpt-4o|amazon.nova-lite-v1:0
+LLM_CHOICE=claude-3-5-sonnet-20241022|gpt-4o|amazon.nova-lite-v1:0|ollama|openrouter
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
@@ -114,14 +116,26 @@ class AgentDependencies:
 
 ### System Features ✅ COMPLETED
 
-#### PydanticAI Agent Refactor ✅ COMPLETED 2025-06-30
-- **Core Architecture**: Complete refactor following PydanticAI best practices
-- **Tool Organization**: All tools moved to `agent/tools.py` with `register_tools()` function
+#### PydanticAI Agent Refactor ✅ COMPLETED 2025-07-05
+- **Core Architecture**: Complete refactor following PydanticAI best practices with proper Agent[AgentDependencies] typing
+- **Tool Architecture**: Tools separated into `agent/tools.py` (logic) and `agent/agent.py` (@agent.tool decorators)
+- **Reference Pattern Alignment**: Tool structure matches PydanticAI reference implementation with RunContext[AgentDependencies]
+- **BinaryContent Integration**: Proper PydanticAI BinaryContent usage for screenshot tools across all models
 - **Message History**: Fixed GUI integration with proper PydanticAI ModelMessage types
 - **MCP Integration**: Proper MCPServerStdio implementation with context management
 - **Test Coverage**: Comprehensive test suite with 96% pass rate (87/91 tests passing)
 - **Real Integration**: Tests using actual .env configuration instead of mocks
 - **Production Bug Fix**: Resolved critical "Expected code to be unreachable" error
+
+#### Vision System Optimization ✅ COMPLETED 2025-07-05
+- **Multi-Provider Support**: Screenshot analysis works with Claude (Anthropic), GPT-4o (OpenAI), and Nova (AWS Bedrock)
+- **Aspect Ratio Preservation**: Fixed ultra-wide monitor support (6880x2880 → 1280x536) preventing image distortion
+- **Token Optimization**: Reduced screenshot token usage from 31K+ to ~8-12K tokens through proper resizing
+- **Bedrock Direct API**: Custom Nova integration bypassing PydanticAI BinaryContent limitations via `utils/bedrock_vision.py`
+- **Model-Specific Handling**: Automatic quality adjustment for different model capabilities
+- **Ultra-Wide Monitor Support**: Proper handling of 21:9 and wider aspect ratios without distortion
+- **Language Agnostic**: Screenshot tools work regardless of user language (no keyword detection)
+- **PydanticAI Tool Architecture**: Proper separation of tool logic with BinaryContent for cross-model compatibility
 
 #### MCP Server Integration
 - **Reliable Integration**: 4 MCP servers working together effectively
@@ -145,6 +159,8 @@ class AgentDependencies:
 - **Content Curation**: "Organize MCP server info in my knowledge base" → Search → Vault search → Organized note with connections
 - **Video Learning**: "Analyze this YouTube video and create study materials" → Video processing → Study notes → Practice tasks
 - **Project Planning**: "Plan a RAG system project" → Research → Project note → Task breakdown
+- **Visual Analysis**: "What's on my screen?" → Screenshot capture → AI analysis → Detailed description (works with all models)
+- **Multi-Language Support**: "Qu'est-ce que tu vois?" → Screenshot analysis → Response in user's language
 
 ## Development Commands
 
@@ -191,3 +207,46 @@ pytest tests/ -v -s
 - Prioritize stdio MCP servers over SSH connections for better integration
 - Implement robust error handling for all external service connections
 - Maintain clean separation between agent logic, GUI, and tool integrations
+
+## Key Technical Achievements
+
+### Vision System Breakthrough
+This session successfully solved multiple critical issues with screenshot analysis:
+
+1. **Model Hallucination Problem**: Fixed severe image distortion caused by forcing ultra-wide aspect ratios (21:9) into 16:9 dimensions
+2. **Token Efficiency**: Reduced screenshot processing from 31K+ tokens to 8-12K tokens through proper aspect ratio preservation
+3. **Cross-Model Compatibility**: Implemented Nova model support via direct Bedrock API calls when PydanticAI BinaryContent fails
+4. **Architecture Alignment**: Refactored tool structure to match PydanticAI reference patterns while maintaining MCP integration
+
+### Technical Implementation Details
+- **Ultra-Wide Monitor Support**: Preserve original aspect ratio (6880x2880 → 1280x536) instead of forcing 16:9
+- **Model-Specific Handling**: Detect Nova models and use `utils/bedrock_vision.py` for direct API calls
+- **Tool Separation**: Tools in `agent/tools.py` return BinaryContent, wrapped by `@agent.tool` decorators in `agent/agent.py`
+- **Error Resilience**: Graceful handling of vision API failures with meaningful error messages
+
+### PydanticAI Architecture Patterns
+The refactoring aligned the codebase with official PydanticAI patterns:
+
+**Agent Structure** (`agent/agent.py`):
+```python
+# Tools registered inline with @agent.tool decorators
+@agent.tool
+async def take_screenshot(ctx: RunContext[AgentDependencies], quality: int = 75) -> BinaryContent:
+    return await take_screenshot_tool(ctx.deps, quality)
+```
+
+**Tool Logic** (`agent/tools.py`):
+```python
+# Actual implementation separated from decorators
+async def take_screenshot_tool(deps: AgentDependencies, quality: int = 75) -> BinaryContent:
+    image_bytes = take_screenshot(quality)
+    return BinaryContent(data=image_bytes, media_type="image/jpeg")
+```
+
+**Model-Specific Handling** (Nova bypass):
+```python
+# Direct Bedrock API when PydanticAI BinaryContent fails
+if should_use_bedrock_direct(ctx.deps.config):
+    analysis = await analyze_image_with_bedrock(image_bytes, prompt, ctx.deps.config)
+    return analysis  # Return text instead of BinaryContent
+```

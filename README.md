@@ -5,10 +5,10 @@ A PydanticAI-powered agent with integrated MCP servers for productivity tasks. T
 ## Features
 
 - **📝 Note Management**: Obsidian vault integration with 11+ note operations
-- **🔍 Privacy-Focused Search**: SearXNG integration for secure web research  
+- **🔍 Privacy-Focused Search**: SearXNG integration for secure web research
 - **✅ Task Management**: Todoist integration for comprehensive task handling
 - **🎥 Video Analysis**: Enhanced YouTube processing with intelligent summarization
-- **👁️ Vision System**: Real-time screen capture and visual analysis with model optimization
+- **👁️ Vision System**: Multi-model screenshot analysis (Claude, OpenAI, Amazon Nova) with ultra-wide monitor support
 - **🔧 MCP Server Integration**: 4 reliable MCP servers with health monitoring
 - **🛡️ Error Handling**: Graceful degradation when tools are unavailable
 - **⚡ Performance**: Tool operations complete quickly with proper error recovery
@@ -82,33 +82,43 @@ python gui.py
 The agent can use multiple tools to accomplish complex tasks:
 
 ### Research & Documentation
+
 ```bash
 "Research the latest developments in transformer architectures and create study notes"
 ```
+
 **Agent uses:** Web search → Note creation → Optional task creation
 
 ### Content Synthesis
+
 ```bash
 "Find information about PydanticAI vs LangChain and create a comprehensive comparison"
 ```
+
 **Agent uses:** Multiple searches → Note creation with comparison format
 
 ### Video Analysis
+
 ```bash
 "Analyze this YouTube video about machine learning and create study materials"
 ```
+
 **Agent uses:** Video processing → Study note creation
 
 ### Visual Assistance
+
 ```bash
-"What's on my screen?" or "Can you see my screen?"
+"What's on my screen?" or "Can you see my screen?" or "Qu'est-ce que tu vois?"
 ```
-**Agent uses:** Screenshot capture → Visual analysis → Step-by-step guidance
+
+**Agent uses:** Screenshot capture → Visual analysis → Detailed description (works with all models)
 
 ### Knowledge Organization
+
 ```bash
 "Search for MCP server documentation and organize it in my knowledge base"
 ```
+
 **Agent uses:** Search → Vault search → Note creation with connections
 
 See [Usage Examples Documentation](docs/usage_examples.md) for more details.
@@ -149,15 +159,16 @@ The configuration automatically enables JSON API access required for the MCP ser
 
 ```
 project/
-├── agent/              # PydanticAI agent implementation
-│   ├── agent.py       # Main agent with multi-tool coordination (refactored)
-│   ├── tools.py       # Vision tools (screenshot, analysis)
-│   ├── dependencies.py # Dependency injection container  
+├── agent/              # PydanticAI agent implementation (refactored 2025-07-05)
+│   ├── agent.py       # Main agent with @agent.tool decorators following PydanticAI patterns
+│   ├── tools.py       # Tool logic separated from decorators (BinaryContent, model-specific handling)
+│   ├── dependencies.py # Dependency injection container
 │   └── prompts.py     # Dynamic system prompts with coordination logic
 ├── config/            # Configuration management
 ├── mcp_servers/       # MCP server configurations
 ├── utils/             # Shared utilities
-│   ├── screen_capture.py     # Screenshot functionality
+│   ├── screen_capture.py     # Simplified screenshot functionality (50 lines, aspect ratio preservation)
+│   ├── bedrock_vision.py     # Direct Bedrock API for Nova models (bypasses PydanticAI limitations)
 │   ├── logger.py      # Langfuse integration
 │   ├── server_monitor.py     # Health monitoring
 │   └── graceful_degradation.py # Tool failure handling
@@ -176,12 +187,14 @@ project/
 This is a standard PydanticAI agent with MCP server integration:
 
 **Tool Access:**
+
 - Agent has access to tools from 4 MCP servers plus integrated vision system
 - Agent decides which tools to use based on context
 - Natural language requests → appropriate tool calls
-- Direct vision integration for real-time screen analysis
+- Multi-model vision integration (Claude, OpenAI, Amazon Nova) with automatic fallback handling
 
 **Error Handling:**
+
 - Health monitoring for MCP servers
 - Graceful degradation when tools are unavailable
 - Alternative tool suggestions when primary tools fail

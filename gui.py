@@ -8,7 +8,7 @@ import asyncio
 from typing import AsyncGenerator, Optional, List, Tuple
 import gradio as gr
 
-from agent.agent import create_agent, ProductivityAgent
+from agent.agent import create_agent
 from config.settings import load_config, AgentConfig
 
 
@@ -22,7 +22,8 @@ class AgentGUI:
     
     def __init__(self):
         """Initialize the GUI wrapper."""
-        self.agent: Optional[ProductivityAgent] = None
+        self.agent = None
+        self.deps = None
         self.config: Optional[AgentConfig] = None
         self.conversation_history: List[Tuple[str, str]] = []
         self.mcp_context_active = False
@@ -36,7 +37,7 @@ class AgentGUI:
         """
         try:
             self.config = load_config()
-            self.agent = await create_agent(self.config)
+            self.agent, self.deps = await create_agent(self.config)
             return True
         except Exception as e:
             print(f"Failed to initialize agent: {e}")
@@ -84,8 +85,14 @@ class AgentGUI:
                 elif msg["role"] == "assistant":
                     chat_history.append(ModelResponse(parts=[TextPart(content=msg["content"])]))
             
-            # Get complete response from agent with full conversation history
-            response = await self.agent.run_conversation(message, chat_history)
+            # First run - let agent decide if it needs tools
+            if hasattr(self.agent, '_mcp_servers') and self.agent._mcp_servers:
+                async with self.agent.run_mcp_servers():
+                    result = await self.agent.run(message, deps=self.deps, message_history=chat_history)
+            else:
+                result = await self.agent.run(message, deps=self.deps, message_history=chat_history)
+            
+            response = result.output
             
             history.append({"role": "assistant", "content": response})
             
@@ -370,56 +377,27 @@ async def main():
         print(f"🔧 Provider: {gui.config.llm_provider}")
         print(f"🧠 Model: {gui.config.llm_choice}")
         
-        # Start persistent MCP context if MCP servers exist
-        if gui.agent.has_mcp_servers():
-            print("🔗 Starting persistent MCP servers...")
-            try:
-                from agent.agent import agent
-                async with agent.run_mcp_servers():
-                    print("✅ MCP servers started successfully")
-                    gui.mcp_context_active = True
-                    
-                    # Create and launch interface
-                    interface = gui.create_interface()
-                    
-                    print("🌐 Launching web interface...")
-                    print("💡 Open your browser to interact with the agent")
-                    
-                    # Launch with appropriate settings
-                    interface.launch(
-                        server_name="localhost",
-                        server_port=7860,
-                        share=False,
-                        debug=gui.config.debug_mode if gui.config else False,
-                        show_error=True,
-                        quiet=False
-                    )
-            except Exception as e:
-                print(f"⚠️  MCP servers failed to start: {e}")
-                print("Running without MCP servers...")
-                gui.agent.disable_mcp_servers()  # Disable MCP servers
-                
-                # Create and launch interface
-                interface = gui.create_interface()
-                interface.launch(
-                    server_name="localhost",
-                    server_port=7860,
-                    share=False,
-                    debug=gui.config.debug_mode if gui.config else False,
-                    show_error=True,
-                    quiet=False
-                )
+        # MCP servers will start/stop per chat message
+        if hasattr(gui.agent, '_mcp_servers') and gui.agent._mcp_servers:
+            print(f"🔗 MCP servers configured: {len(gui.agent._mcp_servers)} servers")
         else:
-            # No MCP servers
-            interface = gui.create_interface()
-            interface.launch(
-                server_name="localhost",
-                server_port=7860,
-                share=False,
-                debug=gui.config.debug_mode if gui.config else False,
-                show_error=True,
-                quiet=False
-            )
+            print("ℹ️  No MCP servers configured")
+        
+        # Create and launch interface
+        interface = gui.create_interface()
+        
+        print("🌐 Launching web interface...")
+        print("💡 Open your browser to interact with the agent")
+        
+        # Launch with appropriate settings
+        interface.launch(
+            server_name="localhost",
+            server_port=7860,
+            share=False,
+            debug=gui.config.debug_mode if gui.config else False,
+            show_error=True,
+            quiet=False
+        )
     else:
         print("⚠️  Agent initialization failed - check your configuration")
         print("The GUI will still start, but functionality may be limited")

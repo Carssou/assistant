@@ -23,15 +23,9 @@ async def run_interactive_session():
     try:
         # Load configuration and create agent
         config = load_config()
-        agent = await create_agent(config)
+        agent, deps = await create_agent(config)
         
         print(f"✅ Agent initialized with {config.llm_provider} provider")
-        
-        # Debug: Show loaded MCP servers
-        tools_info = await agent.list_available_tools()
-        print(f"🔧 Loaded {len(tools_info)} MCP servers:")
-        for server_name, info in tools_info.items():
-            print(f"  - {server_name}: {info['command']} {' '.join(info['args'])} ({info['status']})")
         
         print("Ready to help with your productivity tasks!\n")
         
@@ -46,8 +40,13 @@ async def run_interactive_session():
                 
                 # Get agent response
                 print("Agent: ", end="", flush=True)
-                response = await agent.run_conversation(user_input)
-                print(response)
+                if hasattr(agent, '_mcp_servers') and agent._mcp_servers:
+                    async with agent.run_mcp_servers():
+                        result = await agent.run(user_input, deps=deps)
+                else:
+                    result = await agent.run(user_input, deps=deps)
+                
+                print(result.data)
                 print()
                 
             except KeyboardInterrupt:
@@ -58,7 +57,7 @@ async def run_interactive_session():
                 print("Please try again.\n")
         
         # Clean up
-        await agent.close()
+        await deps.close()
         
     except Exception as e:
         print(f"Failed to initialize agent: {e}")
@@ -70,15 +69,20 @@ async def run_single_query(query: str):
     """Run a single query against the agent."""
     try:
         config = load_config()
-        agent = await create_agent(config)
+        agent, deps = await create_agent(config)
         
         print(f"Query: {query}")
         print("=" * 50)
         
-        response = await agent.run_conversation(query)
-        print(f"Response: {response}")
+        if hasattr(agent, '_mcp_servers') and agent._mcp_servers:
+            async with agent.run_mcp_servers():
+                result = await agent.run(query, deps=deps)
+        else:
+            result = await agent.run(query, deps=deps)
         
-        await agent.close()
+        print(f"Response: {result.data}")
+        
+        await deps.close()
         
     except Exception as e:
         print(f"Error: {e}")

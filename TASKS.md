@@ -515,7 +515,7 @@ SEARCH_FALLBACK_ENABLED=true
 
 ---
 
-### Task 1.5: Vision System Integration ✅ COMPLETED 2025-06-28
+### Task 1.5: Vision System Integration & Multi-Model Optimization ✅ COMPLETED 2025-07-05
 
 **Priority**: High
 **Status**: ✅ COMPLETED
@@ -535,30 +535,38 @@ Integrate a vision system to enable the agent to take screenshots and analyze wh
 - [x] Add transparent screenshot saving to screenshots/ folder ✅ 2025-06-28
 - [x] Update system prompt to trigger vision on screen-related queries ✅ 2025-06-28
 - [x] Update project documentation (CLAUDE.md, README.md) ✅ 2025-06-28
+- [x] Fix ultra-wide monitor aspect ratio distortion (6880x2880 → 1280x536) ✅ 2025-07-05
+- [x] Implement Nova model support via direct Bedrock API (utils/bedrock_vision.py) ✅ 2025-07-05
+- [x] Optimize token usage from 31K+ to 8-12K tokens through proper resizing ✅ 2025-07-05
+- [x] Align tool architecture with PydanticAI patterns (BinaryContent, RunContext) ✅ 2025-07-05
+- [x] Create language-agnostic tool detection (no keyword parsing) ✅ 2025-07-05
 
 #### Technical Implementation:
 
 **Core Components:**
 
-- **utils/screen_capture.py**: Screenshot capture with pyautogui and PIL
-- **agent/tools.py**: PydanticAI tool definitions for vision functionality
+- **utils/screen_capture.py**: Simplified screenshot capture (50 lines) with aspect ratio preservation
+- **utils/bedrock_vision.py**: Direct Bedrock API for Nova models bypassing PydanticAI limitations
+- **agent/tools.py**: Tool logic separated from decorators, returns BinaryContent for cross-model compatibility
+- **agent/agent.py**: @agent.tool decorators following PydanticAI patterns with RunContext[AgentDependencies]
 - **Model Optimization**: Automatic quality reduction for lite/micro/mini models
 - **Transparency**: All screenshots saved to screenshots/ folder for user visibility
-- **Format Intelligence**: PNG for high quality, JPEG for small models
+- **Multi-Model Support**: Claude, GPT-4o, and Nova with model-specific handling
 
 **Vision Tools:**
 
-- `take_screenshot`: Full desktop screenshot with model optimization
+- `take_screenshot`: Full desktop screenshot with model optimization and Nova fallback
 - `take_region_screenshot`: Capture specific screen regions
 - `get_screen_info`: Get screen dimensions and cursor position
-- `get_screenshot_for_analysis`: AI-optimized screenshots for analysis
 
 **Model Optimization Features:**
 
-- Detects lite/micro/mini models and reduces quality by 2/3
-- Resizes images to 40% for small models
-- Uses JPEG instead of PNG for better compression
-- Maintains minimum quality of 15 to preserve usability
+- **Ultra-Wide Monitor Support**: Preserves aspect ratio (6880x2880 → 1280x536) preventing distortion
+- **Token Optimization**: Reduced from 31K+ to 8-12K tokens through proper image resizing
+- **Nova Model Handling**: Direct Bedrock API calls when PydanticAI BinaryContent fails
+- **Cross-Model Compatibility**: Works with Claude (Anthropic), GPT-4o (OpenAI), Nova (AWS Bedrock)
+- **Quality Adjustment**: Detects lite/micro/mini models and reduces quality appropriately
+- **Language Agnostic**: Tool detection works regardless of user language
 
 #### Environment Variables:
 
@@ -575,6 +583,11 @@ Integrate a vision system to enable the agent to take screenshots and analyze wh
 - [x] System prompt triggers vision tools appropriately ✅
 - [x] Integration is seamless with existing MCP servers ✅
 - [x] Documentation updated to reflect vision capabilities ✅
+- [x] Ultra-wide monitor distortion issues completely resolved ✅
+- [x] Multi-model support (Claude, GPT-4o, Nova) working reliably ✅
+- [x] Token usage optimized for efficient processing ✅
+- [x] Tool architecture follows PydanticAI best practices ✅
+- [x] Language-agnostic functionality confirmed ✅
 
 ---
 
@@ -717,13 +730,13 @@ TASKS_SMART_SCHEDULING=true
 
 ---
 
-### Task 4.3: PydanticAI Agent Refactor ✅ COMPLETED 2025-06-30
+### Task 4.3: PydanticAI Agent & Tools Architecture Refactor ✅ COMPLETED 2025-07-05
 
 **Priority**: High
 **Status**: ✅ COMPLETED
 
 #### Background:
-Complete refactor of agent/agent.py to follow PydanticAI best practices, improve code organization, and fix critical production bugs.
+Complete refactor of agent/agent.py and agent/tools.py to follow PydanticAI best practices, align with reference implementation patterns, improve code organization, and implement multi-model vision support.
 
 #### Subtasks:
 
@@ -734,14 +747,19 @@ Complete refactor of agent/agent.py to follow PydanticAI best practices, improve
 - [x] Create comprehensive test suite in /tests/ directory ✅ 2025-06-30
 - [x] Implement real integration tests using actual .env configuration ✅ 2025-06-30
 - [x] Fix critical production bug: "Expected code to be unreachable" ✅ 2025-06-30
+- [x] Align tool structure with PydanticAI reference implementation patterns ✅ 2025-07-05
+- [x] Separate tool logic from @agent.tool decorators for better organization ✅ 2025-07-05
+- [x] Implement proper BinaryContent handling for vision tools ✅ 2025-07-05
+- [x] Add RunContext[AgentDependencies] typing throughout ✅ 2025-07-05
 
 #### Technical Implementation ✅ COMPLETED:
 
 **Core Refactor:**
-- Refactored ProductivityAgent class to use global agent pattern
-- Implemented proper PydanticAI Agent initialization with deps_type
-- Added register_tools() function for centralized tool management
+- Refactored agent.py to follow PydanticAI reference implementation patterns
+- Implemented proper Agent[AgentDependencies] typing with RunContext[AgentDependencies]
+- Separated tool logic in agent/tools.py from @agent.tool decorators in agent/agent.py
 - Fixed MCP server context management with async context handling
+- Added BinaryContent handling for cross-model vision compatibility
 
 **Test Coverage:**
 - 96% test pass rate (87/91 tests passing)

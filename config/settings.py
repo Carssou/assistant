@@ -14,12 +14,15 @@ from pydantic_settings import BaseSettings
 
 
 class LLMProvider(str, Enum):
+    
     """Supported LLM providers."""
     
     AWS = "aws"
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     AZURE = "azure"
+    OLLAMA = "ollama"
+    OPENROUTER = "openrouter"
 
 
 class AgentConfig(BaseSettings):
@@ -151,6 +154,31 @@ def create_model_instance(config: AgentConfig):
             
         from pydantic_ai.models.anthropic import AnthropicModel
         return AnthropicModel(model_name=config.llm_choice)
+    
+    elif config.llm_provider == LLMProvider.OLLAMA:
+        # For Ollama, use OpenAI model with custom base URL
+        from pydantic_ai.models.openai import OpenAIModel
+        from pydantic_ai.providers.openai import OpenAIProvider
+        
+        base_url = config.llm_base_url or "http://localhost:11434/v1"
+        return OpenAIModel(
+            model_name=config.llm_choice,
+            provider=OpenAIProvider(base_url=base_url)
+        )
+    
+    elif config.llm_provider == LLMProvider.OPENROUTER:
+        # For OpenRouter, use OpenAI model with OpenRouter provider
+        from pydantic_ai.models.openai import OpenAIModel
+        from pydantic_ai.providers.openrouter import OpenRouterProvider
+        
+        if not config.llm_api_key:
+            raise ValueError("OpenRouter requires an API key")
+        
+        return OpenAIModel(
+            model_name=config.llm_choice,
+            provider=OpenRouterProvider(api_key=config.llm_api_key)
+        )
+    
     else:
         raise ValueError(f"Unsupported LLM provider: {config.llm_provider}")
 

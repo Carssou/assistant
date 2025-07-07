@@ -25,6 +25,7 @@ class AgentDependencies:
     This follows PydanticAI patterns for dependency injection,
     providing access to configuration, HTTP client, logging, and
     other shared resources throughout the agent.
+    Following the reference implementation pattern.
     """
     
     config: AgentConfig
@@ -43,7 +44,6 @@ class AgentDependencies:
         """Clean up resources."""
         await self.http_client.aclose()
         if self.langfuse_client:
-            # Flush any pending Langfuse data
             self.langfuse_client.flush()
 
 
