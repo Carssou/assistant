@@ -40,13 +40,13 @@ class TestAgentGUI:
         agent = Mock()
         agent.run = AsyncMock(return_value=Mock(output="Test response"))
         agent._mcp_servers = [Mock()]
-        
+
         # Create a proper async context manager mock
         async_context = AsyncMock()
         async_context.__aenter__ = AsyncMock(return_value=async_context)
         async_context.__aexit__ = AsyncMock(return_value=None)
         agent.run_mcp_servers = Mock(return_value=async_context)
-        
+
         return agent
 
     def test_gui_initialization(self, mock_gui):
