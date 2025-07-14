@@ -66,7 +66,7 @@ class TestSetupLogging:
 
         assert log_file.exists()
 
-    @patch('utils.logger.Langfuse')
+    @patch("utils.logger.Langfuse")
     def test_langfuse_initialization_success(self, mock_langfuse):
         """Test successful Langfuse initialization."""
         logging.getLogger().handlers.clear()
@@ -75,18 +75,15 @@ class TestSetupLogging:
         mock_langfuse.return_value = mock_client
 
         langfuse_client = setup_logging(
-            langfuse_secret_key="test_secret",
-            langfuse_public_key="test_public"
+            langfuse_secret_key="test_secret", langfuse_public_key="test_public"
         )
 
         mock_langfuse.assert_called_once_with(
-            secret_key="test_secret",
-            public_key="test_public",
-            host="https://cloud.langfuse.com"
+            secret_key="test_secret", public_key="test_public", host="https://cloud.langfuse.com"
         )
         assert langfuse_client == mock_client
 
-    @patch('utils.logger.Langfuse')
+    @patch("utils.logger.Langfuse")
     def test_langfuse_initialization_failure(self, mock_langfuse):
         """Test Langfuse initialization failure handling."""
         logging.getLogger().handlers.clear()
@@ -95,8 +92,7 @@ class TestSetupLogging:
 
         # Should not raise exception, just log warning
         langfuse_client = setup_logging(
-            langfuse_secret_key="test_secret",
-            langfuse_public_key="test_public"
+            langfuse_secret_key="test_secret", langfuse_public_key="test_public"
         )
 
         assert langfuse_client is None
@@ -105,20 +101,20 @@ class TestSetupLogging:
         """Test custom Langfuse host configuration."""
         logging.getLogger().handlers.clear()
 
-        with patch('utils.logger.Langfuse') as mock_langfuse:
+        with patch("utils.logger.Langfuse") as mock_langfuse:
             mock_client = MagicMock()
             mock_langfuse.return_value = mock_client
 
             setup_logging(
                 langfuse_secret_key="test_secret",
                 langfuse_public_key="test_public",
-                langfuse_host="https://custom.langfuse.com"
+                langfuse_host="https://custom.langfuse.com",
             )
 
             mock_langfuse.assert_called_once_with(
                 secret_key="test_secret",
                 public_key="test_public",
-                host="https://custom.langfuse.com"
+                host="https://custom.langfuse.com",
             )
 
     def test_missing_langfuse_credentials(self):
@@ -164,7 +160,7 @@ class TestSetupAgentLogging:
         """Test that setup_agent_logging calls setup_logging with correct parameters."""
         logging.getLogger().handlers.clear()
 
-        with patch('utils.logger.setup_logging') as mock_setup:
+        with patch("utils.logger.setup_logging") as mock_setup:
             mock_setup.return_value = None
 
             result = setup_agent_logging(
@@ -172,7 +168,7 @@ class TestSetupAgentLogging:
                 debug_mode=True,
                 langfuse_secret_key="secret",
                 langfuse_public_key="public",
-                langfuse_host="https://test.com"
+                langfuse_host="https://test.com",
             )
 
             mock_setup.assert_called_once_with(
@@ -180,7 +176,7 @@ class TestSetupAgentLogging:
                 debug_mode=True,
                 langfuse_secret_key="secret",
                 langfuse_public_key="public",
-                langfuse_host="https://test.com"
+                langfuse_host="https://test.com",
             )
             assert result is None
 
@@ -189,7 +185,7 @@ class TestSetupAgentLogging:
         logging.getLogger().handlers.clear()
 
         mock_client = MagicMock()
-        with patch('utils.logger.setup_logging') as mock_setup:
+        with patch("utils.logger.setup_logging") as mock_setup:
             mock_setup.return_value = mock_client
 
             result = setup_agent_logging()

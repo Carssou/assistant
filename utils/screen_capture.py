@@ -21,8 +21,8 @@ def take_screenshot(quality: int = 60) -> bytes:
 
     # Convert to base64
     buffer = io.BytesIO()
-    if screenshot.mode != 'RGB':
-        screenshot = screenshot.convert('RGB')
+    if screenshot.mode != "RGB":
+        screenshot = screenshot.convert("RGB")
 
     # Resize while preserving aspect ratio to avoid distortion
     width, height = screenshot.size
@@ -37,7 +37,7 @@ def take_screenshot(quality: int = 60) -> bytes:
         screenshot = screenshot.resize((max_width, new_height), Image.Resampling.LANCZOS)
         print(f"Resized to: {max_width}x{new_height}")
 
-    screenshot.save(buffer, format='JPEG', quality=quality)
+    screenshot.save(buffer, format="JPEG", quality=quality)
     buffer.seek(0)
 
     # Debug: Check what we're actually sending
@@ -68,10 +68,10 @@ def take_region_screenshot(x: int, y: int, width: int, height: int, quality: int
     screenshot = pyautogui.screenshot(region=(x, y, width, height))
 
     buffer = io.BytesIO()
-    if screenshot.mode != 'RGB':
-        screenshot = screenshot.convert('RGB')
+    if screenshot.mode != "RGB":
+        screenshot = screenshot.convert("RGB")
 
-    screenshot.save(buffer, format='JPEG', quality=quality)
+    screenshot.save(buffer, format="JPEG", quality=quality)
     buffer.seek(0)
     return buffer.getvalue()
 

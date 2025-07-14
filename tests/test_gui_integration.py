@@ -1,5 +1,5 @@
 """
-Unit tests for GUI integration with the refactored ProductivityAgent.
+Unit tests for GUI integration with the refactored PydanticAI Agent.
 
 Tests cover the Gradio interface, agent initialization, chat functionality,
 and error handling scenarios specific to GUI usage.
@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-from agent.agent import ProductivityAgent
+from agent.agent import create_agent
 from config.settings import AgentConfig, LLMProvider
 from gui import AgentGUI
 
@@ -36,10 +36,10 @@ class TestAgentGUI:
 
     @pytest.fixture
     def mock_agent(self):
-        """Create a mock ProductivityAgent for GUI testing."""
-        agent = Mock(spec=ProductivityAgent)
+        """Create a mock Agent for GUI testing."""
+        agent = Mock()
         agent.run_conversation = AsyncMock(return_value="Test response")
-        agent.has_mcp_servers = Mock(return_value=True)
+        agent.mcp_servers = [Mock()]
         agent.disable_mcp_servers = Mock()
         return agent
 
@@ -53,8 +53,10 @@ class TestAgentGUI:
     @pytest.mark.asyncio
     async def test_initialize_agent_success(self, mock_gui, mock_config, mock_agent):
         """Test successful agent initialization."""
-        with patch('gui.load_config', return_value=mock_config) as mock_load, \
-             patch('gui.create_agent', return_value=mock_agent) as mock_create:
+        with (
+            patch("gui.load_config", return_value=mock_config) as mock_load,
+            patch("gui.create_agent", return_value=mock_agent) as mock_create,
+        ):
 
             result = await mock_gui.initialize_agent()
 
@@ -67,7 +69,7 @@ class TestAgentGUI:
     @pytest.mark.asyncio
     async def test_initialize_agent_failure(self, mock_gui):
         """Test agent initialization failure."""
-        with patch('gui.load_config', side_effect=Exception("Config error")):
+        with patch("gui.load_config", side_effect=Exception("Config error")):
             result = await mock_gui.initialize_agent()
 
             assert result is False
@@ -101,7 +103,9 @@ class TestAgentGUI:
     async def test_chat_response_success(self, mock_gui, mock_agent):
         """Test successful chat response."""
         mock_gui.agent = mock_agent
-        mock_agent.run_conversation.return_value = "Agent response"
+        mock_result = Mock()
+        mock_result.output = "Agent response"
+        mock_agent.run.return_value = mock_result
 
         history = [{"role": "user", "content": "Previous message"}]
 
@@ -111,17 +115,18 @@ class TestAgentGUI:
         assert result[-1]["role"] == "assistant"
         assert result[-1]["content"] == "Agent response"
 
-        # Verify agent was called with proper history conversion
-        mock_agent.run_conversation.assert_called_once()
-        call_args = mock_agent.run_conversation.call_args
+        # Verify agent was called with proper parameters
+        mock_agent.run.assert_called_once()
+        call_args = mock_agent.run.call_args
         assert call_args[0][0] == "Test message"  # message
-        assert len(call_args[0][1]) == 1  # converted history
+        assert "deps" in call_args[1]  # deps parameter
+        assert "message_history" in call_args[1]  # message_history parameter
 
     @pytest.mark.asyncio
     async def test_chat_response_mcp_cancel_error(self, mock_gui, mock_agent):
         """Test chat response with MCP cancel scope error (should be handled gracefully)."""
         mock_gui.agent = mock_agent
-        mock_agent.run_conversation.side_effect = Exception("cancel scope error")
+        mock_agent.run.side_effect = Exception("cancel scope error")
 
         history = []
 
@@ -135,7 +140,7 @@ class TestAgentGUI:
     async def test_chat_response_other_error(self, mock_gui, mock_agent):
         """Test chat response with non-MCP error."""
         mock_gui.agent = mock_agent
-        mock_agent.run_conversation.side_effect = Exception("Other error")
+        mock_agent.run.side_effect = Exception("Other error")
 
         history = []
 
@@ -161,6 +166,7 @@ class TestAgentGUI:
     def test_get_vault_name_with_path(self, mock_gui, mock_config):
         """Test vault name extraction with valid path."""
         from pathlib import Path
+
         mock_config.obsidian_vault_path = Path("/Users/test/MyVault")
         mock_gui.config = mock_config
 
@@ -208,14 +214,16 @@ class TestAgentGUI:
     def test_create_interface(self, mock_gui):
         """Test Gradio interface creation."""
         # Mock gradio components to avoid actual GUI creation
-        with patch('gui.gr.Blocks') as mock_blocks, \
-             patch('gui.gr.Markdown'), \
-             patch('gui.gr.Row'), \
-             patch('gui.gr.Column'), \
-             patch('gui.gr.Chatbot'), \
-             patch('gui.gr.Textbox'), \
-             patch('gui.gr.Button'), \
-             patch('gui.gr.State'):
+        with (
+            patch("gui.gr.Blocks") as mock_blocks,
+            patch("gui.gr.Markdown"),
+            patch("gui.gr.Row"),
+            patch("gui.gr.Column"),
+            patch("gui.gr.Chatbot"),
+            patch("gui.gr.Textbox"),
+            patch("gui.gr.Button"),
+            patch("gui.gr.State"),
+        ):
 
             mock_interface = Mock()
             mock_blocks.return_value.__enter__.return_value = mock_interface
@@ -233,13 +241,14 @@ class TestGUIEventHandlers:
     def mock_gui_with_agent(self):
         """Create GUI with mocked agent for event testing."""
         gui = AgentGUI()
-        gui.agent = Mock(spec=ProductivityAgent)
+        gui.agent = Mock()
         gui.agent.run_conversation = AsyncMock(return_value="Event response")
         return gui
 
     def test_add_user_message_empty(self):
         """Test adding empty user message."""
         from gui import AgentGUI
+
         AgentGUI()
 
         # Simulate the add_user_message function logic
@@ -260,6 +269,7 @@ class TestGUIEventHandlers:
     def test_add_user_message_valid(self):
         """Test adding valid user message."""
         from gui import AgentGUI
+
         AgentGUI()
 
         # Simulate the add_user_message function logic
@@ -298,8 +308,7 @@ class TestGUIMainFunction:
     @pytest.mark.asyncio
     async def test_main_agent_init_success(self):
         """Test main function with successful agent initialization."""
-        with patch('gui.AgentGUI') as mock_gui_class, \
-             patch('gui.print'):
+        with patch("gui.AgentGUI") as mock_gui_class, patch("gui.print"):
 
             mock_gui = Mock()
             mock_gui_class.return_value = mock_gui
@@ -309,13 +318,14 @@ class TestGUIMainFunction:
             mock_gui.config.llm_choice = "claude-3-5-sonnet"
             mock_gui.config.debug_mode = False
             mock_gui.agent = Mock()
-            mock_gui.agent.has_mcp_servers = Mock(return_value=False)
+            mock_gui.agent.mcp_servers = []
             mock_gui.create_interface = Mock()
             mock_interface = Mock()
             mock_gui.create_interface.return_value = mock_interface
             mock_interface.launch = Mock()
 
             from gui import main
+
             await main()
 
             mock_gui.initialize_agent.assert_called_once()
@@ -325,14 +335,14 @@ class TestGUIMainFunction:
     @pytest.mark.asyncio
     async def test_main_agent_init_failure(self):
         """Test main function with agent initialization failure."""
-        with patch('gui.AgentGUI') as mock_gui_class, \
-             patch('gui.print') as mock_print:
+        with patch("gui.AgentGUI") as mock_gui_class, patch("gui.print") as mock_print:
 
             mock_gui = Mock()
             mock_gui_class.return_value = mock_gui
             mock_gui.initialize_agent = AsyncMock(return_value=False)
 
             from gui import main
+
             await main()
 
             mock_gui.initialize_agent.assert_called_once()
@@ -342,9 +352,11 @@ class TestGUIMainFunction:
     @pytest.mark.asyncio
     async def test_main_with_mcp_servers(self):
         """Test main function with MCP servers enabled."""
-        with patch('gui.AgentGUI') as mock_gui_class, \
-             patch('gui.print'), \
-             patch('agent.agent.agent') as mock_global_agent:
+        with (
+            patch("gui.AgentGUI") as mock_gui_class,
+            patch("gui.print"),
+            patch("agent.agent.agent") as mock_global_agent,
+        ):
 
             mock_gui = Mock()
             mock_gui_class.return_value = mock_gui
@@ -354,7 +366,7 @@ class TestGUIMainFunction:
             mock_gui.config.llm_choice = "claude-3-5-sonnet"
             mock_gui.config.debug_mode = False
             mock_gui.agent = Mock()
-            mock_gui.agent.has_mcp_servers = Mock(return_value=True)
+            mock_gui.agent.mcp_servers = [Mock()]
             mock_gui.create_interface = Mock()
             mock_interface = Mock()
             mock_gui.create_interface.return_value = mock_interface
@@ -365,6 +377,7 @@ class TestGUIMainFunction:
             mock_global_agent.run_mcp_servers.return_value = mock_context
 
             from gui import main
+
             await main()
 
             mock_gui.initialize_agent.assert_called_once()
@@ -374,9 +387,11 @@ class TestGUIMainFunction:
     @pytest.mark.asyncio
     async def test_main_mcp_servers_fail(self):
         """Test main function when MCP servers fail to start."""
-        with patch('gui.AgentGUI') as mock_gui_class, \
-             patch('gui.print'), \
-             patch('agent.agent.agent') as mock_global_agent:
+        with (
+            patch("gui.AgentGUI") as mock_gui_class,
+            patch("gui.print"),
+            patch("agent.agent.agent") as mock_global_agent,
+        ):
 
             mock_gui = Mock()
             mock_gui_class.return_value = mock_gui
@@ -386,8 +401,8 @@ class TestGUIMainFunction:
             mock_gui.config.llm_choice = "claude-3-5-sonnet"
             mock_gui.config.debug_mode = False
             mock_gui.agent = Mock()
-            mock_gui.agent.has_mcp_servers = Mock(return_value=True)
-            mock_gui.agent.disable_mcp_servers = Mock()
+            mock_gui.agent.mcp_servers = [Mock()]
+            # MCP servers managed by PydanticAI Agent directly
             mock_gui.create_interface = Mock()
             mock_interface = Mock()
             mock_gui.create_interface.return_value = mock_interface
@@ -397,6 +412,7 @@ class TestGUIMainFunction:
             mock_global_agent.run_mcp_servers.side_effect = Exception("MCP failed")
 
             from gui import main
+
             await main()
 
             mock_gui.initialize_agent.assert_called_once()

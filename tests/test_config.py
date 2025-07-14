@@ -36,7 +36,7 @@ class TestAgentConfig:
             "LOG_LEVEL": "DEBUG",
             "DEBUG_MODE": "true",
             "GUI_PORT": "8080",
-            "SEARXNG_BASE_URL": "http://test:9090"
+            "SEARXNG_BASE_URL": "http://test:9090",
         }
 
         with patch.dict(os.environ, test_env, clear=True):
@@ -62,7 +62,7 @@ class TestAgentConfig:
             ("0", False),
             ("no", False),
             ("off", False),
-            ("random", False)
+            ("random", False),
         ]
 
         for env_value, expected in test_cases:
@@ -116,20 +116,16 @@ class TestModelString:
 
     def test_aws_model_string(self):
         """Test AWS Bedrock model string generation."""
-        with patch.dict(os.environ, {
-            "LLM_PROVIDER": "aws",
-            "LLM_CHOICE": "claude-3-5-sonnet"
-        }, clear=True):
+        with patch.dict(
+            os.environ, {"LLM_PROVIDER": "aws", "LLM_CHOICE": "claude-3-5-sonnet"}, clear=True
+        ):
             config = AgentConfig(_env_file=None)
             model_string = get_model_string(config)
             assert model_string == "bedrock:claude-3-5-sonnet"
 
     def test_openai_model_string(self):
         """Test OpenAI model string generation."""
-        with patch.dict(os.environ, {
-            "LLM_PROVIDER": "openai",
-            "LLM_CHOICE": "gpt-4o"
-        }, clear=True):
+        with patch.dict(os.environ, {"LLM_PROVIDER": "openai", "LLM_CHOICE": "gpt-4o"}, clear=True):
             config = AgentConfig(_env_file=None)
             model_string = get_model_string(config)
             assert model_string == "openai:gpt-4o"
@@ -152,7 +148,7 @@ class TestLoadConfig:
         config = load_config()
         assert isinstance(config, AgentConfig)
 
-    @patch('config.settings.AgentConfig')
+    @patch("config.settings.AgentConfig")
     def test_load_config_calls_agent_config(self, mock_agent_config):
         """Test that load_config calls AgentConfig constructor."""
         mock_instance = MagicMock()

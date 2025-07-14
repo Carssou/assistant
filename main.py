@@ -16,11 +16,8 @@ from config.settings import load_config
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('productivity_agent.log')
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler("productivity_agent.log")],
 )
 logger = logging.getLogger(__name__)
 
@@ -38,7 +35,9 @@ async def run_interactive_session():
         agent, deps = await create_agent(config)
 
         print(f"✅ Agent initialized with {config.llm_provider} provider")
-        logger.info(f"Agent initialized with {config.llm_provider} provider using {config.llm_choice} model")
+        logger.info(
+            f"Agent initialized with {config.llm_provider} provider using {config.llm_choice} model"
+        )
 
         print("Ready to help with your productivity tasks!\n")
 
@@ -48,12 +47,12 @@ async def run_interactive_session():
                 user_input = input("You: ").strip()
 
                 # Check for exit commands
-                if user_input.lower() in ['quit', 'exit', 'q', '']:
+                if user_input.lower() in ["quit", "exit", "q", ""]:
                     break
 
                 # Get agent response
                 print("Agent: ", end="", flush=True)
-                if hasattr(agent, '_mcp_servers') and agent._mcp_servers:
+                if hasattr(agent, "_mcp_servers") and agent._mcp_servers:
                     async with agent.run_mcp_servers():
                         result = await agent.run(user_input, deps=deps)
                 else:
@@ -92,7 +91,7 @@ async def run_single_query(query: str):
         print("=" * 50)
         logger.info(f"Running single query: {query}")
 
-        if hasattr(agent, '_mcp_servers') and agent._mcp_servers:
+        if hasattr(agent, "_mcp_servers") and agent._mcp_servers:
             async with agent.run_mcp_servers():
                 result = await agent.run(query, deps=deps)
         else:
@@ -110,8 +109,8 @@ async def run_single_query(query: str):
 
 
 @click.command()
-@click.option('--query', '-q', help='Run a single query instead of interactive mode')
-@click.option('--config-test', is_flag=True, help='Test configuration loading')
+@click.option("--query", "-q", help="Run a single query instead of interactive mode")
+@click.option("--config-test", is_flag=True, help="Test configuration loading")
 def main(query: str | None, config_test: bool):
     """
     Productivity Agent CLI.
@@ -126,10 +125,13 @@ def main(query: str | None, config_test: bool):
             print(f"LLM Provider: {config.llm_provider}")
             print(f"Model: {config.llm_choice}")
             print(f"Debug Mode: {config.debug_mode}")
-            logger.info(f"Configuration test successful - Provider: {config.llm_provider}, Model: {config.llm_choice}")
+            logger.info(
+                f"Configuration test successful - Provider: {config.llm_provider}, Model: {config.llm_choice}"
+            )
 
             # Test model creation
             from config.settings import create_model_instance
+
             model = create_model_instance(config)
             print(f"✅ Model instance created: {type(model).__name__}")
             logger.info(f"Model instance created: {type(model).__name__}")

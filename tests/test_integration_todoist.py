@@ -10,7 +10,7 @@ import os
 
 import pytest
 
-from agent.agent import ProductivityAgent, create_agent
+from agent.agent import create_agent
 from config.settings import load_config
 
 
@@ -33,6 +33,7 @@ async def test_todoist_mcp_server_integration():
     # Test that agent can start with MCP servers
     try:
         from agent.agent import agent as global_agent
+
         async with global_agent.run_mcp_servers():
             # If we get here, the MCP server started successfully
             assert True, "MCP server started and agent can communicate with it"
@@ -57,6 +58,7 @@ async def test_todoist_tools_available():
 
     try:
         from agent.agent import agent as global_agent
+
         async with global_agent.run_mcp_servers():
             # Test a simple query that should list available tools
             result = await agent.run_conversation("What tools do you have available?")
@@ -66,16 +68,22 @@ async def test_todoist_tools_available():
 
             # Check if Todoist-related functionality is mentioned
             todoist_indicators = [
-                "task", "todoist", "create", "manage",
-                "todo", "project", "due date"
+                "task",
+                "todoist",
+                "create",
+                "manage",
+                "todo",
+                "project",
+                "due date",
             ]
 
             found_indicators = [
-                indicator for indicator in todoist_indicators
-                if indicator in result_text.lower()
+                indicator for indicator in todoist_indicators if indicator in result_text.lower()
             ]
 
-            assert len(found_indicators) > 0, f"No Todoist functionality mentioned in response: {result_text}"
+            assert (
+                len(found_indicators) > 0
+            ), f"No Todoist functionality mentioned in response: {result_text}"
 
     except Exception as e:
         # Don't fail the test if the server isn't properly configured

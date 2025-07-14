@@ -17,7 +17,7 @@ def setup_logging(
     debug_mode: bool = False,
     langfuse_secret_key: str | None = None,
     langfuse_public_key: str | None = None,
-    langfuse_host: str = "https://cloud.langfuse.com"
+    langfuse_host: str = "https://cloud.langfuse.com",
 ) -> Langfuse | None:
     """
     Configure logging and Langfuse observability.
@@ -41,7 +41,7 @@ def setup_logging(
         level=getattr(logging, log_level.upper()),
         format="%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-        stream=sys.stdout
+        stream=sys.stdout,
     )
 
     # Create logs directory for file logging
@@ -66,9 +66,7 @@ def setup_logging(
     if langfuse_secret_key and langfuse_public_key:
         try:
             langfuse_client = Langfuse(
-                secret_key=langfuse_secret_key,
-                public_key=langfuse_public_key,
-                host=langfuse_host
+                secret_key=langfuse_secret_key, public_key=langfuse_public_key, host=langfuse_host
             )
             logging.info("Langfuse observability initialized")
         except Exception as e:
@@ -119,7 +117,7 @@ def setup_agent_logging(
     debug_mode: bool = False,
     langfuse_secret_key: str | None = None,
     langfuse_public_key: str | None = None,
-    langfuse_host: str = "https://cloud.langfuse.com"
+    langfuse_host: str = "https://cloud.langfuse.com",
 ) -> Langfuse | None:
     """
     Set up logging specifically for the agent application.
@@ -139,7 +137,7 @@ def setup_agent_logging(
         debug_mode=debug_mode,
         langfuse_secret_key=langfuse_secret_key,
         langfuse_public_key=langfuse_public_key,
-        langfuse_host=langfuse_host
+        langfuse_host=langfuse_host,
     )
 
 

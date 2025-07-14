@@ -79,7 +79,7 @@ async def take_screenshot_tool(deps: AgentDependencies, quality: int = 75) -> Bi
         model_name = deps.config.llm_choice.lower()
 
         # Adjust quality for small models
-        small_model_keywords = ['lite', 'micro', 'mini']
+        small_model_keywords = ["lite", "micro", "mini"]
         if any(keyword in model_name for keyword in small_model_keywords):
             quality = max(15, quality // 3)
 
@@ -88,7 +88,8 @@ async def take_screenshot_tool(deps: AgentDependencies, quality: int = 75) -> Bi
 
         # Save for user transparency (convert back to data URL for saving)
         import base64
-        encoded = base64.b64encode(image_bytes).decode('utf-8')
+
+        encoded = base64.b64encode(image_bytes).decode("utf-8")
         data_url = f"data:image/jpeg;base64,{encoded}"
         _save_screenshot(data_url, "screenshot")
 
@@ -98,7 +99,9 @@ async def take_screenshot_tool(deps: AgentDependencies, quality: int = 75) -> Bi
         raise RuntimeError(f"Error taking screenshot: {str(e)}") from e
 
 
-async def take_region_screenshot_tool(deps: AgentDependencies, x: int, y: int, width: int, height: int, quality: int = 85) -> BinaryContent:
+async def take_region_screenshot_tool(
+    deps: AgentDependencies, x: int, y: int, width: int, height: int, quality: int = 85
+) -> BinaryContent:
     """
     Take a screenshot of a specific screen region.
 
@@ -137,12 +140,6 @@ async def get_screen_info_tool(deps: AgentDependencies) -> dict[str, Any]:
         screen_size = get_screen_size()
         cursor_pos = get_cursor_position()
 
-        return {
-            "screen_size": screen_size,
-            "cursor_position": cursor_pos,
-            "timestamp": time.time()
-        }
+        return {"screen_size": screen_size, "cursor_position": cursor_pos, "timestamp": time.time()}
     except Exception as e:
         return {"error": f"Error getting screen info: {str(e)}"}
-
-

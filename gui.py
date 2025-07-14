@@ -43,11 +43,7 @@ class AgentGUI:
             print(f"Failed to initialize agent: {e}")
             return False
 
-    async def chat_response(
-        self,
-        message: str,
-        history: list
-    ) -> list:
+    async def chat_response(self, message: str, history: list) -> list:
         """
         Generate complete chat response with MCP error handling.
 
@@ -59,7 +55,12 @@ class AgentGUI:
             Updated history with complete response
         """
         if not self.agent:
-            history.append({"role": "assistant", "content": "Error: Agent not initialized. Please check configuration."})
+            history.append(
+                {
+                    "role": "assistant",
+                    "content": "Error: Agent not initialized. Please check configuration.",
+                }
+            )
             return history
 
         if not message.strip():
@@ -88,14 +89,18 @@ class AgentGUI:
 
             for msg in history:
                 if msg["role"] == "user":
-                    chat_history.append(ModelRequest(parts=[UserPromptPart(content=msg["content"])]))
+                    chat_history.append(
+                        ModelRequest(parts=[UserPromptPart(content=msg["content"])])
+                    )
                 elif msg["role"] == "assistant":
                     chat_history.append(ModelResponse(parts=[TextPart(content=msg["content"])]))
 
             # First run - let agent decide if it needs tools
-            if hasattr(self.agent, '_mcp_servers') and self.agent._mcp_servers:
+            if hasattr(self.agent, "_mcp_servers") and self.agent._mcp_servers:
                 async with self.agent.run_mcp_servers():
-                    result = await self.agent.run(message, deps=self.deps, message_history=chat_history)
+                    result = await self.agent.run(
+                        message, deps=self.deps, message_history=chat_history
+                    )
             else:
                 result = await self.agent.run(message, deps=self.deps, message_history=chat_history)
 
@@ -113,7 +118,9 @@ class AgentGUI:
             if "cancel scope" in error_str or "different task" in error_str:
                 # Log but don't fail - this is a known MCP threading issue
                 print(f"MCP context warning (continuing normally): {e}")
-                history.append({"role": "assistant", "content": "Response completed (MCP context warning)"})
+                history.append(
+                    {"role": "assistant", "content": "Response completed (MCP context warning)"}
+                )
             else:
                 # Other errors should be shown to user
                 history.append({"role": "assistant", "content": f"Error: {str(e)}"})
@@ -121,38 +128,39 @@ class AgentGUI:
 
     def _get_vault_name(self) -> str:
         """Extract vault name from full path."""
-        vault_path = getattr(self.config, 'obsidian_vault_path', None)
+        vault_path = getattr(self.config, "obsidian_vault_path", None)
         if not vault_path:
-            return 'Not configured'
+            return "Not configured"
 
         from pathlib import Path
+
         return Path(vault_path).name
 
     def _format_provider_name(self) -> str:
         """Format provider name for display."""
         if not self.config or not self.config.llm_provider:
-            return 'Not configured'
+            return "Not configured"
 
         provider_str = str(self.config.llm_provider)
-        if hasattr(self.config.llm_provider, 'value'):
+        if hasattr(self.config.llm_provider, "value"):
             provider_str = self.config.llm_provider.value
         else:
-            provider_str = provider_str.split('.')[-1]
+            provider_str = provider_str.split(".")[-1]
 
         # Provider name mapping for proper display
         provider_names = {
-            'aws': 'AWS',
-            'openai': 'OpenAI',
-            'anthropic': 'Anthropic',
-            'google': 'Google',
-            'azure': 'Azure',
-            'huggingface': 'Hugging Face',
-            'cohere': 'Cohere',
-            'mistral': 'Mistral',
-            'groq': 'Groq',
-            'together': 'Together AI',
-            'replicate': 'Replicate',
-            'bedrock': 'AWS Bedrock'
+            "aws": "AWS",
+            "openai": "OpenAI",
+            "anthropic": "Anthropic",
+            "google": "Google",
+            "azure": "Azure",
+            "huggingface": "Hugging Face",
+            "cohere": "Cohere",
+            "mistral": "Mistral",
+            "groq": "Groq",
+            "together": "Together AI",
+            "replicate": "Replicate",
+            "bedrock": "AWS Bedrock",
         }
 
         return provider_names.get(provider_str.lower(), provider_str.title())
@@ -198,7 +206,7 @@ class AgentGUI:
                 margin: 5px 0;
                 border-radius: 10px;
             }
-            """
+            """,
         ) as interface:
 
             gr.Markdown(
@@ -220,7 +228,7 @@ class AgentGUI:
                         type="messages",
                         show_copy_button=True,
                         show_share_button=False,
-                        render_markdown=True
+                        render_markdown=True,
                     )
 
                     with gr.Row():
@@ -228,7 +236,7 @@ class AgentGUI:
                             label="Message",
                             placeholder="Ask me to search, take notes, manage tasks, or analyze videos...",
                             container=False,
-                            scale=4
+                            scale=4,
                         )
                         submit = gr.Button("Send", variant="primary", scale=1)
                         clear = gr.Button("Clear", variant="secondary", scale=1)
@@ -237,10 +245,7 @@ class AgentGUI:
                     # Configuration panel
                     gr.Markdown("### Configuration")
 
-                    config_display = gr.Markdown(
-                        self.get_config_info(),
-                        label="Current Config"
-                    )
+                    config_display = gr.Markdown(self.get_config_info(), label="Current Config")
 
                     refresh_config = gr.Button("Refresh Config", variant="secondary")
 
@@ -248,13 +253,13 @@ class AgentGUI:
                     gr.Markdown("### Status")
 
                     agent_status = gr.Markdown(
-                        "🔴 **Agent**: Not initialized",
-                        label="Agent Status"
+                        "🔴 **Agent**: Not initialized", label="Agent Status"
                     )
 
                     # Help section
                     gr.Markdown("### Usage Examples")
-                    gr.Markdown("""
+                    gr.Markdown(
+                        """
                     **Research & Notes:**
                     - "Research latest AI developments and create notes"
                     - "Search for productivity tools and organize findings"
@@ -270,7 +275,8 @@ class AgentGUI:
                     **Web Search:**
                     - "Find recent news about AI developments"
                     - "Search for Python best practices"
-                    """)
+                    """
+                    )
 
             # State for message passing
             msg_state = gr.State("")
@@ -286,6 +292,7 @@ class AgentGUI:
             def get_response(message, history):
                 """Get complete agent response."""
                 import logging
+
                 logging.info(f"GUI get_response called with message: {message}")
 
                 if not message.strip():
@@ -293,6 +300,7 @@ class AgentGUI:
 
                 # Create async event loop for response
                 import asyncio
+
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
 
@@ -307,6 +315,7 @@ class AgentGUI:
                     print(f"[GUI EVENT] Response error: {e}")
                     logging.error(f"GUI response error: {e}")
                     import traceback
+
                     traceback.print_exc()
                     history.append({"role": "assistant", "content": f"Error: {str(e)}"})
                     return history
@@ -321,7 +330,9 @@ class AgentGUI:
             async def refresh_config_info():
                 """Refresh configuration display."""
                 await self.initialize_agent()
-                status = "🟢 **Agent**: Ready" if self.agent else "🔴 **Agent**: Failed to initialize"
+                status = (
+                    "🟢 **Agent**: Ready" if self.agent else "🔴 **Agent**: Failed to initialize"
+                )
                 return self.get_config_info(), status
 
             # Event connections
@@ -329,41 +340,22 @@ class AgentGUI:
                 add_user_message,
                 inputs=[msg, chatbot],
                 outputs=[msg, chatbot, msg_state],
-                queue=False
-            ).then(
-                get_response,
-                inputs=[msg_state, chatbot],
-                outputs=chatbot,
-                queue=True
-            )
+                queue=False,
+            ).then(get_response, inputs=[msg_state, chatbot], outputs=chatbot, queue=True)
 
             msg.submit(
                 add_user_message,
                 inputs=[msg, chatbot],
                 outputs=[msg, chatbot, msg_state],
-                queue=False
-            ).then(
-                get_response,
-                inputs=[msg_state, chatbot],
-                outputs=chatbot,
-                queue=True
-            )
+                queue=False,
+            ).then(get_response, inputs=[msg_state, chatbot], outputs=chatbot, queue=True)
 
-            clear.click(
-                clear_chat,
-                outputs=[chatbot, msg]
-            )
+            clear.click(clear_chat, outputs=[chatbot, msg])
 
-            refresh_config.click(
-                refresh_config_info,
-                outputs=[config_display, agent_status]
-            )
+            refresh_config.click(refresh_config_info, outputs=[config_display, agent_status])
 
             # Initialize on startup
-            interface.load(
-                refresh_config_info,
-                outputs=[config_display, agent_status]
-            )
+            interface.load(refresh_config_info, outputs=[config_display, agent_status])
 
         return interface
 
@@ -385,7 +377,7 @@ async def main():
         print(f"🧠 Model: {gui.config.llm_choice}")
 
         # MCP servers will start/stop per chat message
-        if hasattr(gui.agent, '_mcp_servers') and gui.agent._mcp_servers:
+        if hasattr(gui.agent, "_mcp_servers") and gui.agent._mcp_servers:
             print(f"🔗 MCP servers configured: {len(gui.agent._mcp_servers)} servers")
         else:
             print("ℹ️  No MCP servers configured")
@@ -403,7 +395,7 @@ async def main():
             share=False,
             debug=gui.config.debug_mode if gui.config else False,
             show_error=True,
-            quiet=False
+            quiet=False,
         )
     else:
         print("⚠️  Agent initialization failed - check your configuration")

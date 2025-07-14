@@ -26,13 +26,15 @@ class TestObsidianIntegration:
         vault_path = Path(temp_dir)
 
         # Create some test notes
-        (vault_path / "test_note.md").write_text("""---
+        (vault_path / "test_note.md").write_text(
+            """---
 title: Test Note
 created: 2023-12-25T10:30:00
 tags: [test, sample]
 ---
 
-This is a test note with some content.""")
+This is a test note with some content."""
+        )
 
         (vault_path / "Daily Notes").mkdir()
         (vault_path / "Templates").mkdir()
@@ -53,12 +55,13 @@ This is a test note with some content.""")
             server = create_obsidian_mcp_server(mock_config)
 
             assert server is not None
-            assert server.command == 'npx'
-            assert server.args == ['-y', 'obsidian-mcp-pydanticai', str(temp_vault)]
+            assert server.command == "npx"
+            assert server.args == ["-y", "obsidian-mcp-pydanticai", str(temp_vault)]
 
         finally:
             # Clean up temporary directory
             import shutil
+
             shutil.rmtree(temp_vault)
 
     def test_temp_vault_structure(self):
@@ -79,6 +82,7 @@ This is a test note with some content.""")
 
         finally:
             import shutil
+
             shutil.rmtree(temp_vault)
 
     def test_mcp_server_configuration_validation(self):
@@ -104,7 +108,10 @@ This is a test note with some content.""")
         config = AgentConfig()
 
         # Skip if no real vault is configured
-        if not config.obsidian_vault_path or str(config.obsidian_vault_path) == "/path/to/your/vault":
+        if (
+            not config.obsidian_vault_path
+            or str(config.obsidian_vault_path) == "/path/to/your/vault"
+        ):
             pytest.skip("No real Obsidian vault configured in environment")
 
         # Verify the vault exists and is accessible
@@ -117,7 +124,7 @@ This is a test note with some content.""")
             config.llm_api_key = "test-key"
 
             # Mock the model creation to avoid actual API calls
-            with patch('config.settings.create_model_instance') as mock_create_model:
+            with patch("config.settings.create_model_instance") as mock_create_model:
                 mock_model_instance = AsyncMock()
                 mock_create_model.return_value = mock_model_instance
 
@@ -129,15 +136,18 @@ This is a test note with some content.""")
                 servers = agent.mcp_servers
                 if len(servers) > 0:
                     # Check if Obsidian MCP server is configured
-                    obsidian_server = next((s for s in servers if 'obsidian-mcp' in ' '.join(s.args)), None)
+                    obsidian_server = next(
+                        (s for s in servers if "obsidian-mcp" in " ".join(s.args)), None
+                    )
                     if obsidian_server:
-                        assert obsidian_server.command == 'npx'
+                        assert obsidian_server.command == "npx"
                         assert str(config.obsidian_vault_path) in obsidian_server.args
 
                 # Test that we can start the MCP server context
                 # This will actually try to start the obsidian-mcp server
                 try:
                     from agent.agent import agent as global_agent
+
                     async with global_agent.run_mcp_servers():
                         # If we get here, the MCP server started successfully
                         # and PydanticAI can communicate with it
@@ -145,7 +155,10 @@ This is a test note with some content.""")
 
                 except Exception as e:
                     # If obsidian-mcp is not available, skip the test
-                    if any(keyword in str(e).lower() for keyword in ["npx", "obsidian-mcp", "command not found", "not found"]):
+                    if any(
+                        keyword in str(e).lower()
+                        for keyword in ["npx", "obsidian-mcp", "command not found", "not found"]
+                    ):
                         pytest.skip(f"obsidian-mcp server not available: {e}")
                     else:
                         # This is a real error we should investigate
@@ -156,7 +169,7 @@ This is a test note with some content.""")
 
         except Exception:
             # Clean up on error
-            if 'agent' in locals():
+            if "agent" in locals():
                 await agent.close()
             raise
 
@@ -166,14 +179,16 @@ This is a test note with some content.""")
 
         try:
             # Check if npx is available
-            result = subprocess.run(['npx', '--version'],
-                                  capture_output=True, text=True, timeout=10)
+            result = subprocess.run(
+                ["npx", "--version"], capture_output=True, text=True, timeout=10
+            )
             if result.returncode != 0:
                 pytest.skip("npx not available on system")
 
             # Try to get help from obsidian-mcp to see if it's available
-            result = subprocess.run(['npx', '-y', 'obsidian-mcp', '--help'],
-                                  capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                ["npx", "-y", "obsidian-mcp", "--help"], capture_output=True, text=True, timeout=30
+            )
 
             if result.returncode == 0:
                 # Package is available and working

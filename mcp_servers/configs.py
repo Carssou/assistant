@@ -5,7 +5,6 @@ This module provides factory functions for creating MCP server instances
 for different productivity tools.
 """
 
-
 from pydantic_ai.mcp import MCPServerStdio
 
 from config.settings import AgentConfig
@@ -33,10 +32,7 @@ def create_obsidian_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
     if not vault_path.exists():
         raise ValueError(f"Obsidian vault path does not exist: {vault_path}")
 
-    return MCPServerStdio(
-        command='npx',
-        args=['-y', 'obsidian-mcp-pydanticai', str(vault_path)]
-    )
+    return MCPServerStdio(command="npx", args=["-y", "obsidian-mcp-pydanticai", str(vault_path)])
 
 
 def create_searxng_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
@@ -52,19 +48,15 @@ def create_searxng_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
     if not config.searxng_base_url:
         return None
 
-    env = {'SEARXNG_URL': config.searxng_base_url}
+    env = {"SEARXNG_URL": config.searxng_base_url}
 
     # Add authentication if configured
-    if hasattr(config, 'searxng_username') and config.searxng_username:
-        env['AUTH_USERNAME'] = config.searxng_username
-    if hasattr(config, 'searxng_password') and config.searxng_password:
-        env['AUTH_PASSWORD'] = config.searxng_password
+    if hasattr(config, "searxng_username") and config.searxng_username:
+        env["AUTH_USERNAME"] = config.searxng_username
+    if hasattr(config, "searxng_password") and config.searxng_password:
+        env["AUTH_PASSWORD"] = config.searxng_password
 
-    return MCPServerStdio(
-        command='npx',
-        args=['-y', 'mcp-searxng'],
-        env=env
-    )
+    return MCPServerStdio(command="npx", args=["-y", "mcp-searxng"], env=env)
 
 
 def create_todoist_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
@@ -81,9 +73,9 @@ def create_todoist_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
         return None
 
     return MCPServerStdio(
-        command='npx',
-        args=['-y', '@abhiz123/todoist-mcp-server'],
-        env={'TODOIST_API_TOKEN': config.todoist_api_token}
+        command="npx",
+        args=["-y", "@abhiz123/todoist-mcp-server"],
+        env={"TODOIST_API_TOKEN": config.todoist_api_token},
     )
 
 
@@ -100,10 +92,7 @@ def create_youtube_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
     # YouTube MCP server doesn't require API key - it works without one
     # Always create the server as it provides video processing capabilities
     # Using our PydanticAI-compatible fork with underscore tool naming
-    return MCPServerStdio(
-        command='npx',
-        args=['-y', 'youtube-video-summarizer-mcp-pydanticai']
-    )
+    return MCPServerStdio(command="npx", args=["-y", "youtube-video-summarizer-mcp-pydanticai"])
 
 
 def create_all_mcp_servers(config: AgentConfig) -> list[MCPServerStdio]:

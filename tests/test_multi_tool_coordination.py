@@ -44,7 +44,6 @@ class TestMultiToolCoordination:
         """Test video processing → study note creation workflow."""
         agent, deps = agent_setup
 
-
         # Expected flow: get-video-info → create_note → todoist_create_task
         assert agent is not None
         assert agent is not None
@@ -54,7 +53,6 @@ class TestMultiToolCoordination:
         """Test multiple search → synthesis → organized notes."""
         agent, deps = agent_setup
 
-
         # Expected: multiple searxng_web_search → web_url_read → create_note
         assert agent is not None
         assert agent is not None
@@ -63,7 +61,6 @@ class TestMultiToolCoordination:
     async def test_content_curation_workflow(self, agent_setup):
         """Test search → read → organize → link workflow."""
         agent, deps = agent_setup
-
 
         # Expected: searxng_web_search → web_url_read → search_vault → create_note → edit_note
         assert agent is not None
@@ -101,7 +98,7 @@ class TestMultiToolCoordination:
             "Search for AI news",
             "Create a test note",
             "Get my tasks",
-            "Search for ML resources"
+            "Search for ML resources",
         ]
 
         # Would test concurrent execution performance
@@ -124,9 +121,7 @@ class TestMultiToolCoordination:
         system_prompt = get_system_prompt()
 
         # Check for key capabilities mentioned
-        expected_capabilities = [
-            "search", "note", "task", "video"
-        ]
+        expected_capabilities = ["search", "note", "task", "video"]
 
         for capability in expected_capabilities:
             assert capability in system_prompt.lower()
@@ -143,16 +138,13 @@ class TestToolCoordinationLogic:
         test_cases = [
             {
                 "query": "Research AI and create notes",
-                "expected_tools": ["searxng_web_search", "create_note"]
+                "expected_tools": ["searxng_web_search", "create_note"],
             },
-            {
-                "query": "Analyze YouTube video",
-                "expected_tools": ["get-video-info", "create_note"]
-            },
+            {"query": "Analyze YouTube video", "expected_tools": ["get-video-info", "create_note"]},
             {
                 "query": "Find my tasks about machine learning",
-                "expected_tools": ["todoist_get_tasks"]
-            }
+                "expected_tools": ["todoist_get_tasks"],
+            },
         ]
 
         # In real implementation, we'd verify tool selection
@@ -166,7 +158,7 @@ class TestToolCoordinationLogic:
         workflow_chains = [
             ["searxng_web_search", "create_note", "todoist_create_task"],
             ["get-video-info", "create_note"],
-            ["searxng_web_search", "web_url_read", "create_note"]
+            ["searxng_web_search", "web_url_read", "create_note"],
         ]
 
         # Verify logical ordering

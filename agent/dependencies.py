@@ -32,13 +32,13 @@ class AgentDependencies:
     langfuse_client: Langfuse | None = None
     vault_path: Path | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Post-initialization setup."""
         # Set vault path from config if available
         if self.config.obsidian_vault_path:
             self.vault_path = self.config.obsidian_vault_path
 
-    async def close(self):
+    async def close(self) -> None:
         """Clean up resources."""
         await self.http_client.aclose()
         if self.langfuse_client:
@@ -58,7 +58,7 @@ async def create_agent_dependencies(config: AgentConfig) -> AgentDependencies:
     # Create HTTP client with timeout configuration
     http_client = httpx.AsyncClient(
         timeout=httpx.Timeout(30.0),  # 30 second timeout
-        limits=httpx.Limits(max_keepalive_connections=10, max_connections=100)
+        limits=httpx.Limits(max_keepalive_connections=10, max_connections=100),
     )
 
     # Set up logging
@@ -69,17 +69,14 @@ async def create_agent_dependencies(config: AgentConfig) -> AgentDependencies:
         debug_mode=config.debug_mode,
         langfuse_secret_key=config.langfuse_secret_key,
         langfuse_public_key=config.langfuse_public_key,
-        langfuse_host=config.langfuse_host
+        langfuse_host=config.langfuse_host,
     )
 
     logger = get_logger(__name__)
 
     # Create dependencies container
     deps = AgentDependencies(
-        config=config,
-        http_client=http_client,
-        logger=logger,
-        langfuse_client=langfuse_client
+        config=config, http_client=http_client, logger=logger, langfuse_client=langfuse_client
     )
 
     logger.info("Agent dependencies initialized successfully")
@@ -109,19 +106,14 @@ def create_sync_dependencies(config: AgentConfig) -> AgentDependencies:
         debug_mode=config.debug_mode,
         langfuse_secret_key=config.langfuse_secret_key,
         langfuse_public_key=config.langfuse_public_key,
-        langfuse_host=config.langfuse_host
+        langfuse_host=config.langfuse_host,
     )
 
     logger = get_logger(__name__)
 
     # Create a simple async client for sync usage
-    http_client = httpx.AsyncClient(
-        timeout=httpx.Timeout(30.0)
-    )
+    http_client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
 
     return AgentDependencies(
-        config=config,
-        http_client=http_client,
-        logger=logger,
-        langfuse_client=langfuse_client
+        config=config, http_client=http_client, logger=logger, langfuse_client=langfuse_client
     )

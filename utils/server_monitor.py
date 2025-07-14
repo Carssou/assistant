@@ -16,6 +16,7 @@ from typing import Any
 
 class ServerStatus(Enum):
     """MCP Server status enumeration."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     DOWN = "down"
@@ -25,6 +26,7 @@ class ServerStatus(Enum):
 @dataclass
 class ServerHealthMetrics:
     """Health metrics for a single MCP server."""
+
     server_name: str
     status: ServerStatus
     last_check: datetime
@@ -38,6 +40,7 @@ class ServerHealthMetrics:
 @dataclass
 class CoordinationMetrics:
     """Metrics for multi-tool coordination performance."""
+
     successful_workflows: int = 0
     failed_workflows: int = 0
     average_workflow_time: float = 0.0
@@ -73,9 +76,7 @@ class ServerHealthMonitor:
         # Initialize metrics for each server
         for server_name in server_names:
             self.server_metrics[server_name] = ServerHealthMetrics(
-                server_name=server_name,
-                status=ServerStatus.UNKNOWN,
-                last_check=datetime.now()
+                server_name=server_name, status=ServerStatus.UNKNOWN, last_check=datetime.now()
             )
 
         self._monitoring = True
@@ -173,6 +174,7 @@ class ServerHealthMonitor:
 
         # Simulate 95% uptime
         import random
+
         return random.random() > 0.05
 
     def get_server_status(self, server_name: str) -> ServerHealthMetrics | None:
@@ -194,21 +196,24 @@ class ServerHealthMonitor:
     def get_healthy_servers(self) -> list[str]:
         """Get list of currently healthy servers."""
         return [
-            name for name, metrics in self.server_metrics.items()
+            name
+            for name, metrics in self.server_metrics.items()
             if metrics.status == ServerStatus.HEALTHY
         ]
 
     def get_degraded_servers(self) -> list[str]:
         """Get list of degraded servers."""
         return [
-            name for name, metrics in self.server_metrics.items()
+            name
+            for name, metrics in self.server_metrics.items()
             if metrics.status == ServerStatus.DEGRADED
         ]
 
     def get_down_servers(self) -> list[str]:
         """Get list of down servers."""
         return [
-            name for name, metrics in self.server_metrics.items()
+            name
+            for name, metrics in self.server_metrics.items()
             if metrics.status == ServerStatus.DOWN
         ]
 
@@ -224,13 +229,15 @@ class ServerHealthMonitor:
         self.coordination_metrics.total_tool_calls += len(tools_used)
 
         # Update average workflow time
-        total_workflows = (self.coordination_metrics.successful_workflows +
-                          self.coordination_metrics.failed_workflows)
+        total_workflows = (
+            self.coordination_metrics.successful_workflows
+            + self.coordination_metrics.failed_workflows
+        )
         if total_workflows > 1:
             current_avg = self.coordination_metrics.average_workflow_time
             self.coordination_metrics.average_workflow_time = (
-                (current_avg * (total_workflows - 1) + workflow_time) / total_workflows
-            )
+                current_avg * (total_workflows - 1) + workflow_time
+            ) / total_workflows
         else:
             self.coordination_metrics.average_workflow_time = workflow_time
 
@@ -281,7 +288,7 @@ class ServerHealthMonitor:
             "todoist_create_task": "todoist",
             "todoist_get_tasks": "todoist",
             "get-video-info": "youtube",
-            "get_video_info": "youtube"
+            "get_video_info": "youtube",
         }
 
         return tool_server_map.get(tool_name)
@@ -308,21 +315,20 @@ class ServerHealthMonitor:
 
         return {
             "overall_health": overall_health,
-            "servers": {
-                "total": total,
-                "healthy": healthy,
-                "degraded": degraded,
-                "down": down
-            },
+            "servers": {"total": total, "healthy": healthy, "degraded": degraded, "down": down},
             "coordination": {
                 "success_rate": (
-                    self.coordination_metrics.successful_workflows /
-                    max(1, self.coordination_metrics.successful_workflows +
-                        self.coordination_metrics.failed_workflows)
-                ) * 100,
+                    self.coordination_metrics.successful_workflows
+                    / max(
+                        1,
+                        self.coordination_metrics.successful_workflows
+                        + self.coordination_metrics.failed_workflows,
+                    )
+                )
+                * 100,
                 "average_workflow_time": self.coordination_metrics.average_workflow_time,
-                "cross_server_operations": self.coordination_metrics.cross_server_operations
-            }
+                "cross_server_operations": self.coordination_metrics.cross_server_operations,
+            },
         }
 
 

@@ -44,12 +44,7 @@ async def test_coordination_workflow(query: str, expected_tools: list[str]) -> d
         print(f"\n✅ COMPLETED in {duration:.2f} seconds")
         print(f"Response: {result}")
 
-        return {
-            "success": True,
-            "duration": duration,
-            "response": result,
-            "error": None
-        }
+        return {"success": True, "duration": duration, "response": result, "error": None}
 
     except Exception as e:
         end_time = time.time()
@@ -58,12 +53,7 @@ async def test_coordination_workflow(query: str, expected_tools: list[str]) -> d
         print(f"\n❌ FAILED after {duration:.2f} seconds")
         print(f"Error: {str(e)}")
 
-        return {
-            "success": False,
-            "duration": duration,
-            "response": None,
-            "error": str(e)
-        }
+        return {"success": False, "duration": duration, "response": None, "error": str(e)}
 
 
 async def run_coordination_tests():
@@ -75,33 +65,30 @@ async def run_coordination_tests():
         {
             "name": "Simple Search & Note",
             "query": "Search for 'MCP servers' and create a quick reference note",
-            "expected_tools": ["searxng_web_search", "create_note"]
+            "expected_tools": ["searxng_web_search", "create_note"],
         },
         {
             "name": "Research Synthesis",
             "query": "Research PydanticAI features and create a comprehensive feature overview",
-            "expected_tools": ["searxng_web_search", "create_note"]
+            "expected_tools": ["searxng_web_search", "create_note"],
         },
         {
             "name": "Content Organization",
             "query": "Find information about agent frameworks and organize it in my knowledge base",
-            "expected_tools": ["searxng_web_search", "search_vault", "create_note"]
+            "expected_tools": ["searxng_web_search", "search_vault", "create_note"],
         },
         {
             "name": "Learning Workflow",
             "query": "Explain multi-agent systems and create study notes with key concepts",
-            "expected_tools": ["searxng_web_search", "create_note"]
-        }
+            "expected_tools": ["searxng_web_search", "create_note"],
+        },
     ]
 
     results = []
 
     for test_case in test_cases:
         print(f"\n🔍 Running: {test_case['name']}")
-        result = await test_coordination_workflow(
-            test_case["query"],
-            test_case["expected_tools"]
-        )
+        result = await test_coordination_workflow(test_case["query"], test_case["expected_tools"])
         result["test_name"] = test_case["name"]
         results.append(result)
 
@@ -139,23 +126,23 @@ async def demonstrate_coordination_features():
         {
             "name": "Context Flow",
             "description": "Information flows between tools",
-            "query": "Search for 'AI agent best practices' and create structured notes with the findings"
+            "query": "Search for 'AI agent best practices' and create structured notes with the findings",
         },
         {
             "name": "Intelligent Synthesis",
             "description": "Multiple sources combined intelligently",
-            "query": "Research both 'MCP protocol' and 'PydanticAI agents' then create a comprehensive integration guide"
+            "query": "Research both 'MCP protocol' and 'PydanticAI agents' then create a comprehensive integration guide",
         },
         {
             "name": "Adaptive Workflow",
             "description": "Agent adapts workflow based on content",
-            "query": "Help me understand transformer architecture - find resources and create a learning plan"
+            "query": "Help me understand transformer architecture - find resources and create a learning plan",
         },
         {
             "name": "Knowledge Integration",
             "description": "Links to existing knowledge base",
-            "query": "Research prompt engineering techniques and connect them to my existing AI notes"
-        }
+            "query": "Research prompt engineering techniques and connect them to my existing AI notes",
+        },
     ]
 
     for feature in features:
@@ -175,6 +162,7 @@ async def demonstrate_coordination_features():
 
 
 if __name__ == "__main__":
+
     async def main():
         print("🚀 Starting Multi-Tool Coordination Tests")
 

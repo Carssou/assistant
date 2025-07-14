@@ -63,7 +63,9 @@ class TestRealAgentIntegration:
         try:
             # Test real conversation with actual model
             print(f"Testing conversation with {config.llm_provider} - {config.llm_choice}")
-            response = await agent.run_conversation("Hello! Just say 'Hello back' - this is a test.")
+            response = await agent.run_conversation(
+                "Hello! Just say 'Hello back' - this is a test."
+            )
 
             # The response should be a string
             assert isinstance(response, str)
@@ -100,7 +102,7 @@ class TestRealAgentIntegration:
             # Create proper message history format
             history = [
                 ModelRequest(parts=[UserPromptPart(content="Previous user message")]),
-                ModelResponse(parts=[TextPart(content="Previous assistant response")])
+                ModelResponse(parts=[TextPart(content="Previous assistant response")]),
             ]
 
             response2 = await agent.run_conversation("Follow up message", history)
@@ -148,8 +150,8 @@ class TestRealAgentIntegration:
 
         # Verify config loaded properly
         assert config is not None
-        assert hasattr(config, 'llm_provider')
-        assert hasattr(config, 'llm_choice')
+        assert hasattr(config, "llm_provider")
+        assert hasattr(config, "llm_choice")
 
         print("Real config loaded:")
         print(f"  LLM Provider: {config.llm_provider}")

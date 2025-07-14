@@ -17,7 +17,9 @@ from config.settings import AgentConfig, create_model_instance, load_config
 from mcp_servers.configs import create_all_mcp_servers
 
 
-async def create_agent(config: AgentConfig | None = None) -> tuple[Agent[AgentDependencies], AgentDependencies]:
+async def create_agent(
+    config: AgentConfig | None = None,
+) -> tuple[Agent[AgentDependencies], AgentDependencies]:
     """
     Create PydanticAI agent with dependencies.
 
@@ -48,7 +50,7 @@ async def create_agent(config: AgentConfig | None = None) -> tuple[Agent[AgentDe
 
     # Register tools following reference implementation pattern
     @agent.tool
-    async def take_screenshot(ctx: RunContext[AgentDependencies], quality: int = 75):
+    async def take_screenshot(ctx: RunContext[AgentDependencies], quality: int = 75) -> str | Any:
         """
         Take a screenshot for visual analysis and assistance.
 
@@ -68,6 +70,7 @@ async def create_agent(config: AgentConfig | None = None) -> tuple[Agent[AgentDe
 
         # Check if Nova model - use direct Bedrock API
         from utils.bedrock_vision import should_use_bedrock_direct
+
         if should_use_bedrock_direct(ctx.deps.config):
             print("Using direct Bedrock API for Nova model")
             from utils.bedrock_vision import analyze_full_screenshot_with_bedrock
@@ -83,7 +86,14 @@ async def create_agent(config: AgentConfig | None = None) -> tuple[Agent[AgentDe
         return await take_screenshot_tool(ctx.deps, quality)
 
     @agent.tool
-    async def take_region_screenshot(ctx: RunContext[AgentDependencies], x: int, y: int, width: int, height: int, quality: int = 85):
+    async def take_region_screenshot(
+        ctx: RunContext[AgentDependencies],
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        quality: int = 85,
+    ) -> str | Any:
         """
         Take a screenshot of a specific rectangular region of the screen.
 
@@ -106,6 +116,7 @@ async def create_agent(config: AgentConfig | None = None) -> tuple[Agent[AgentDe
 
         # Check if Nova model - use direct Bedrock API
         from utils.bedrock_vision import should_use_bedrock_direct
+
         if should_use_bedrock_direct(ctx.deps.config):
             print("Using direct Bedrock API for Nova model (region screenshot)")
             from utils.bedrock_vision import analyze_region_screenshot_with_bedrock

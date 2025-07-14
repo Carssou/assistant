@@ -10,8 +10,8 @@ from datetime import datetime
 
 def get_system_prompt() -> str:
     """Generate system prompt with current date/time information."""
-    current_date = datetime.now().strftime('%Y-%m-%d')
-    current_time = datetime.now().strftime('%H:%M')
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_time = datetime.now().strftime("%H:%M")
 
     return f"""You are an intelligent productivity assistant equipped with diverse capabilities to help users work more effectively.
 
