@@ -17,7 +17,7 @@ def get_system_prompt() -> str:
     """
     current_date = datetime.now().strftime('%Y-%m-%d')
     current_time = datetime.now().strftime('%H:%M')
-    
+
     return f"""You are a helpful productivity assistant with access to multiple tools and services through MCP (Model Context Protocol) servers.
 
 ## Current Context
@@ -173,7 +173,7 @@ Let me help you research {topic}:
 4. Generate follow-up tasks if needed
 5. Link to existing knowledge in your vault
 """,
-    
+
     "video_learning": """
 I'll process this video for you:
 1. Extract video metadata and transcript
@@ -182,7 +182,7 @@ I'll process this video for you:
 4. Add practice tasks and review schedules
 5. Link to related content in your vault
 """,
-    
+
     "information_synthesis": """
 Let me gather comprehensive information on {topic}:
 1. Search multiple authoritative sources
@@ -192,7 +192,7 @@ Let me gather comprehensive information on {topic}:
 5. Identify gaps for further research
 6. Add follow-up tasks for deeper investigation
 """,
-    
+
     "content_curation": """
 I'll help you curate and organize content on {topic}:
 1. Search for high-quality resources and articles
@@ -202,7 +202,7 @@ I'll help you curate and organize content on {topic}:
 5. Link to existing knowledge and create connections
 6. Suggest organizational improvements
 """,
-    
+
     "project_planning": """
 Let me help you plan your {project_type} project:
 1. Research best practices and methodologies
@@ -212,7 +212,7 @@ Let me help you plan your {project_type} project:
 5. Add initial tasks to your task management system
 6. Schedule regular review and milestone tasks
 """,
-    
+
     "learning_pathway": """
 I'll create a learning pathway for {subject}:
 1. Research learning resources and prerequisites

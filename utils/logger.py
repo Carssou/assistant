@@ -8,7 +8,6 @@ for the PydanticAI agent using Langfuse for tracing and monitoring.
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
 from langfuse import Langfuse
 
@@ -16,10 +15,10 @@ from langfuse import Langfuse
 def setup_logging(
     log_level: str = "INFO",
     debug_mode: bool = False,
-    langfuse_secret_key: Optional[str] = None,
-    langfuse_public_key: Optional[str] = None,
+    langfuse_secret_key: str | None = None,
+    langfuse_public_key: str | None = None,
     langfuse_host: str = "https://cloud.langfuse.com"
-) -> Optional[Langfuse]:
+) -> Langfuse | None:
     """
     Configure logging and Langfuse observability.
     
@@ -36,7 +35,7 @@ def setup_logging(
     # Set up Python logging
     if debug_mode:
         log_level = "DEBUG"
-    
+
     # Configure logging format
     logging.basicConfig(
         level=getattr(logging, log_level.upper()),
@@ -44,11 +43,11 @@ def setup_logging(
         datefmt="%Y-%m-%d %H:%M:%S",
         stream=sys.stdout
     )
-    
+
     # Create logs directory for file logging
     logs_dir = Path("logs")
     logs_dir.mkdir(exist_ok=True)
-    
+
     # Add file handler
     file_handler = logging.FileHandler(logs_dir / "agent.log")
     file_handler.setLevel(getattr(logging, log_level.upper()))
@@ -57,11 +56,11 @@ def setup_logging(
             "%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d | %(message)s"
         )
     )
-    
+
     # Add file handler to root logger
     root_logger = logging.getLogger()
     root_logger.addHandler(file_handler)
-    
+
     # Initialize Langfuse if credentials provided
     langfuse_client = None
     if langfuse_secret_key and langfuse_public_key:
@@ -74,7 +73,7 @@ def setup_logging(
             logging.info("Langfuse observability initialized")
         except Exception as e:
             logging.warning(f"Failed to initialize Langfuse: {e}")
-    
+
     # Enable HTTP request/response logging for API calls
     if debug_mode:
         logging.getLogger("httpx").setLevel(logging.DEBUG)
@@ -94,11 +93,11 @@ def setup_logging(
         logging.getLogger("botocore.endpoint").setLevel(logging.DEBUG)
         logging.getLogger("gradio").setLevel(logging.WARNING)
         logging.getLogger("uvicorn").setLevel(logging.WARNING)
-    
+
     logging.info(f"Logging initialized with level: {log_level}")
     if debug_mode:
         logging.debug("Debug mode enabled")
-    
+
     return langfuse_client
 
 
@@ -116,12 +115,12 @@ def get_logger(name: str) -> logging.Logger:
 
 
 def setup_agent_logging(
-    log_level: str = "INFO", 
+    log_level: str = "INFO",
     debug_mode: bool = False,
-    langfuse_secret_key: Optional[str] = None,
-    langfuse_public_key: Optional[str] = None,
+    langfuse_secret_key: str | None = None,
+    langfuse_public_key: str | None = None,
     langfuse_host: str = "https://cloud.langfuse.com"
-) -> Optional[Langfuse]:
+) -> Langfuse | None:
     """
     Set up logging specifically for the agent application.
     

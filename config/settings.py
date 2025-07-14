@@ -7,16 +7,15 @@ mapping directly to environment variables defined in .env.example.
 
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
 class LLMProvider(str, Enum):
-    
+
     """Supported LLM providers."""
-    
+
     AWS = "aws"
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
@@ -27,52 +26,52 @@ class LLMProvider(str, Enum):
 
 class AgentConfig(BaseSettings):
     """Main agent configuration using Pydantic Settings."""
-    
+
     # LLM Configuration
     llm_provider: LLMProvider = Field(default=LLMProvider.AWS, description="LLM provider to use")
-    llm_base_url: Optional[str] = Field(default=None, description="Base URL for custom endpoints")
-    llm_api_key: Optional[str] = Field(default=None, description="API key for the LLM provider")
+    llm_base_url: str | None = Field(default=None, description="Base URL for custom endpoints")
+    llm_api_key: str | None = Field(default=None, description="API key for the LLM provider")
     llm_choice: str = Field(default="claude-3-5-sonnet", description="Model choice")
-    
+
     # AWS Bedrock Configuration
     aws_region: str = Field(default="us-east-1", description="AWS region for Bedrock")
-    aws_access_key_id: Optional[str] = Field(default=None, description="AWS access key ID")
-    aws_secret_access_key: Optional[str] = Field(default=None, description="AWS secret access key")
-    
+    aws_access_key_id: str | None = Field(default=None, description="AWS access key ID")
+    aws_secret_access_key: str | None = Field(default=None, description="AWS secret access key")
+
     # Obsidian MCP Server Configuration
-    obsidian_vault_path: Optional[Path] = Field(default=None, description="Path to Obsidian vault")
+    obsidian_vault_path: Path | None = Field(default=None, description="Path to Obsidian vault")
     obsidian_daily_notes_path: str = Field(default="Daily Notes", description="Daily notes subfolder")
     obsidian_templates_path: str = Field(default="Templates", description="Templates subfolder")
-    
+
     # SearXNG MCP Server Configuration
     searxng_base_url: str = Field(default="http://localhost:8080", description="SearXNG instance URL")
-    searxng_api_key: Optional[str] = Field(default=None, description="SearXNG API key if required")
-    
+    searxng_api_key: str | None = Field(default=None, description="SearXNG API key if required")
+
     # Todoist MCP Server Configuration
-    todoist_api_token: Optional[str] = Field(default=None, description="Todoist API token")
-    todoist_project_id: Optional[str] = Field(default=None, description="Default project ID")
-    
+    todoist_api_token: str | None = Field(default=None, description="Todoist API token")
+    todoist_project_id: str | None = Field(default=None, description="Default project ID")
+
     # YouTube MCP Server Configuration
-    youtube_api_key: Optional[str] = Field(default=None, description="YouTube API key")
+    youtube_api_key: str | None = Field(default=None, description="YouTube API key")
     youtube_transcript_language: str = Field(default="en", description="Default transcript language")
-    
+
     # Custom Python MCP Server Configuration
-    custom_mcp_server_path: Optional[Path] = Field(default=None, description="Path to custom Python MCP server")
-    custom_mcp_server_module: Optional[str] = Field(default=None, description="Python module to run (e.g. 'vision_mcp.server')")
+    custom_mcp_server_path: Path | None = Field(default=None, description="Path to custom Python MCP server")
+    custom_mcp_server_module: str | None = Field(default=None, description="Python module to run (e.g. 'vision_mcp.server')")
     custom_mcp_server_entry: str = Field(default="main.py", description="Entry point file for custom MCP server")
-    
+
     # Development & Monitoring
     log_level: str = Field(default="INFO", description="Logging level")
-    langfuse_secret_key: Optional[str] = Field(default=None, description="Langfuse secret key")
-    langfuse_public_key: Optional[str] = Field(default=None, description="Langfuse public key")
+    langfuse_secret_key: str | None = Field(default=None, description="Langfuse secret key")
+    langfuse_public_key: str | None = Field(default=None, description="Langfuse public key")
     langfuse_host: str = Field(default="https://cloud.langfuse.com", description="Langfuse host")
     debug_mode: bool = Field(default=True, description="Enable debug mode")
-    
+
     # GUI Configuration
     gui_theme: str = Field(default="default", description="Gradio theme")
     gui_port: int = Field(default=7860, description="GUI port")
     gui_share: bool = Field(default=False, description="Enable public sharing")
-    
+
     @field_validator("obsidian_vault_path")
     @classmethod
     def validate_vault_path(cls, v):
@@ -86,7 +85,7 @@ class AgentConfig(BaseSettings):
             if not v.is_dir():
                 raise ValueError(f"Obsidian vault path is not a directory: {v}")
         return v
-    
+
     @field_validator("debug_mode", mode="before")
     @classmethod
     def parse_debug_mode(cls, v):
@@ -94,7 +93,7 @@ class AgentConfig(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ("true", "1", "yes", "on")
         return v
-    
+
     @field_validator("gui_share", mode="before")
     @classmethod
     def parse_gui_share(cls, v):
@@ -102,7 +101,7 @@ class AgentConfig(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ("true", "1", "yes", "on")
         return v
-    
+
     model_config = {
         "env_file": ".env",
         "case_sensitive": False,
@@ -129,10 +128,10 @@ def create_model_instance(config: AgentConfig):
             os.environ['AWS_SECRET_ACCESS_KEY'] = config.aws_secret_access_key
         if config.aws_region:
             os.environ['AWS_DEFAULT_REGION'] = config.aws_region
-            
+
         from pydantic_ai.models.bedrock import BedrockConverseModel
         return BedrockConverseModel(model_name=config.llm_choice)
-            
+
     elif config.llm_provider == LLMProvider.OPENAI:
         # Set OpenAI environment variables for the SDK
         import os
@@ -140,10 +139,10 @@ def create_model_instance(config: AgentConfig):
             os.environ['OPENAI_API_KEY'] = config.llm_api_key
         if config.llm_base_url:
             os.environ['OPENAI_BASE_URL'] = config.llm_base_url
-            
+
         from pydantic_ai.models.openai import OpenAIModel
         return OpenAIModel(model_name=config.llm_choice)
-    
+
     elif config.llm_provider == LLMProvider.ANTHROPIC:
         # Set Anthropic environment variables for the SDK
         import os
@@ -151,34 +150,34 @@ def create_model_instance(config: AgentConfig):
             os.environ['ANTHROPIC_API_KEY'] = config.llm_api_key
         if config.llm_base_url:
             os.environ['ANTHROPIC_BASE_URL'] = config.llm_base_url
-            
+
         from pydantic_ai.models.anthropic import AnthropicModel
         return AnthropicModel(model_name=config.llm_choice)
-    
+
     elif config.llm_provider == LLMProvider.OLLAMA:
         # For Ollama, use OpenAI model with custom base URL
         from pydantic_ai.models.openai import OpenAIModel
         from pydantic_ai.providers.openai import OpenAIProvider
-        
+
         base_url = config.llm_base_url or "http://localhost:11434/v1"
         return OpenAIModel(
             model_name=config.llm_choice,
             provider=OpenAIProvider(base_url=base_url)
         )
-    
+
     elif config.llm_provider == LLMProvider.OPENROUTER:
         # For OpenRouter, use OpenAI model with OpenRouter provider
         from pydantic_ai.models.openai import OpenAIModel
         from pydantic_ai.providers.openrouter import OpenRouterProvider
-        
+
         if not config.llm_api_key:
             raise ValueError("OpenRouter requires an API key")
-        
+
         return OpenAIModel(
             model_name=config.llm_choice,
             provider=OpenRouterProvider(api_key=config.llm_api_key)
         )
-    
+
     else:
         raise ValueError(f"Unsupported LLM provider: {config.llm_provider}")
 

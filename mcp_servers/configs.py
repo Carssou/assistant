@@ -5,15 +5,13 @@ This module provides factory functions for creating MCP server instances
 for different productivity tools.
 """
 
-from pathlib import Path
-from typing import List, Optional
 
 from pydantic_ai.mcp import MCPServerStdio
 
 from config.settings import AgentConfig
 
 
-def create_obsidian_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
+def create_obsidian_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
     """
     Create Obsidian MCP server instance.
     
@@ -25,23 +23,23 @@ def create_obsidian_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
     """
     if not config.obsidian_vault_path:
         return None
-    
+
     vault_path = config.obsidian_vault_path
-    
+
     # Skip validation for placeholder paths
     if str(vault_path) == "/path/to/your/vault":
         return None
-        
+
     if not vault_path.exists():
         raise ValueError(f"Obsidian vault path does not exist: {vault_path}")
-    
+
     return MCPServerStdio(
         command='npx',
         args=['-y', 'obsidian-mcp-pydanticai', str(vault_path)]
     )
 
 
-def create_searxng_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
+def create_searxng_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
     """
     Create SearXNG MCP server instance.
     
@@ -53,15 +51,15 @@ def create_searxng_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
     """
     if not config.searxng_base_url:
         return None
-    
+
     env = {'SEARXNG_URL': config.searxng_base_url}
-    
+
     # Add authentication if configured
     if hasattr(config, 'searxng_username') and config.searxng_username:
         env['AUTH_USERNAME'] = config.searxng_username
     if hasattr(config, 'searxng_password') and config.searxng_password:
         env['AUTH_PASSWORD'] = config.searxng_password
-    
+
     return MCPServerStdio(
         command='npx',
         args=['-y', 'mcp-searxng'],
@@ -69,7 +67,7 @@ def create_searxng_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
     )
 
 
-def create_todoist_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
+def create_todoist_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
     """
     Create Todoist MCP server instance.
     
@@ -81,7 +79,7 @@ def create_todoist_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
     """
     if not config.todoist_api_token:
         return None
-    
+
     return MCPServerStdio(
         command='npx',
         args=['-y', '@abhiz123/todoist-mcp-server'],
@@ -89,7 +87,7 @@ def create_todoist_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
     )
 
 
-def create_youtube_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
+def create_youtube_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
     """
     Create YouTube MCP server instance.
     
@@ -108,7 +106,7 @@ def create_youtube_mcp_server(config: AgentConfig) -> Optional[MCPServerStdio]:
     )
 
 
-def create_all_mcp_servers(config: AgentConfig) -> List[MCPServerStdio]:
+def create_all_mcp_servers(config: AgentConfig) -> list[MCPServerStdio]:
     """
     Create all configured MCP servers.
     
@@ -119,23 +117,23 @@ def create_all_mcp_servers(config: AgentConfig) -> List[MCPServerStdio]:
         List of configured MCP server instances
     """
     servers = []
-    
+
     # Add Obsidian server if configured
     obsidian_server = create_obsidian_mcp_server(config)
     if obsidian_server:
         servers.append(obsidian_server)
-    
+
     # Add other servers as they are implemented
     searxng_server = create_searxng_mcp_server(config)
     if searxng_server:
         servers.append(searxng_server)
-    
+
     todoist_server = create_todoist_mcp_server(config)
     if todoist_server:
         servers.append(todoist_server)
-    
+
     youtube_server = create_youtube_mcp_server(config)
     if youtube_server:
         servers.append(youtube_server)
-    
+
     return servers
