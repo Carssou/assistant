@@ -5,11 +5,11 @@ This module provides direct Bedrock API calls for models that don't work
 well with PydanticAI's BinaryContent abstraction (like Nova models).
 """
 
-import json
 import base64
-from typing import Dict, Any
+import json
 
 import boto3
+
 from config.settings import AgentConfig
 
 
@@ -32,10 +32,13 @@ async def analyze_image_with_bedrock(
         
     Returns:
         Text response from the model
+        
+    Raises:
+        Exception: If Bedrock API call fails or image analysis encounters errors
     """
     # Encode to base64 as required by the payload format
     base64_image = base64.b64encode(image_bytes).decode('utf-8')
-    
+
     # Official AWS Bedrock Nova format from AWS documentation
     payload = {
         "schemaVersion": "messages-v1",
@@ -62,29 +65,29 @@ async def analyze_image_with_bedrock(
             "temperature": temperature
         }
     }
-    
+
     # Create Bedrock client with AWS credentials from config/.env
     client = boto3.client(
-        "bedrock-runtime", 
+        "bedrock-runtime",
         region_name=config.aws_region or "us-east-1"
     )
-    
+
     try:
         print(f"Calling Bedrock API with model: {config.llm_choice}")
-        
+
         # Call Bedrock API directly using model from config.llm_choice (.env)
         response = client.invoke_model(
             modelId=config.llm_choice,  # Gets from LLM_CHOICE in .env
             body=json.dumps(payload)
         )
-        
+
         # Parse Nova response format (different from Claude)
         response_body = json.loads(response['body'].read())
         analysis_text = response_body['output']['message']['content'][0]['text']
-        
+
         print(f"Bedrock analysis completed successfully ({len(analysis_text)} characters)")
         return analysis_text
-        
+
     except Exception as e:
         error_msg = f"Error analyzing image with Bedrock: {str(e)}"
         print(f"Bedrock API error: {error_msg}")
@@ -103,7 +106,7 @@ def should_use_bedrock_direct(config: AgentConfig) -> bool:
     """
     model_name = config.llm_choice.lower()  # From LLM_CHOICE in .env
     provider = config.llm_provider.lower()  # From LLM_PROVIDER in .env
-    
+
     # Use direct API for Nova models on AWS
     return provider == "aws" and "nova" in model_name
 
@@ -111,7 +114,7 @@ def should_use_bedrock_direct(config: AgentConfig) -> bool:
 async def analyze_full_screenshot_with_bedrock(
     image_bytes: bytes,
     config: AgentConfig,
-    custom_prompt: str = None
+    custom_prompt: str | None = None
 ) -> str:
     """
     Analyze a full screenshot with Bedrock API.
@@ -131,11 +134,11 @@ async def analyze_full_screenshot_with_bedrock(
 async def analyze_region_screenshot_with_bedrock(
     image_bytes: bytes,
     x: int,
-    y: int, 
+    y: int,
     width: int,
     height: int,
     config: AgentConfig,
-    custom_prompt: str = None
+    custom_prompt: str | None = None
 ) -> str:
     """
     Analyze a region screenshot with Bedrock API.
@@ -168,16 +171,16 @@ def test_bedrock_config(config: AgentConfig) -> str:
     """
     if not should_use_bedrock_direct(config):
         return f"Bedrock direct API not needed - Provider: {config.llm_provider}, Model: {config.llm_choice}"
-    
+
     try:
         import boto3
-        client = boto3.client(
-            "bedrock-runtime", 
+        # Test if we can create the client (basic credential check)
+        boto3.client(
+            "bedrock-runtime",
             region_name=config.aws_region or "us-east-1"
         )
-        
-        # Test if we can create the client (basic credential check)
+
         return f"Bedrock configuration valid - Model: {config.llm_choice}, Region: {config.aws_region or 'us-east-1'}"
-        
+
     except Exception as e:
         return f"Bedrock configuration error: {str(e)}"
