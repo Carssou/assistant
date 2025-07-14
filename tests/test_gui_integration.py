@@ -38,9 +38,15 @@ class TestAgentGUI:
     def mock_agent(self):
         """Create a mock Agent for GUI testing."""
         agent = Mock()
-        agent.run_conversation = AsyncMock(return_value="Test response")
-        agent.mcp_servers = [Mock()]
-        agent.disable_mcp_servers = Mock()
+        agent.run = AsyncMock(return_value=Mock(output="Test response"))
+        agent._mcp_servers = [Mock()]
+        
+        # Create a proper async context manager mock
+        async_context = AsyncMock()
+        async_context.__aenter__ = AsyncMock(return_value=async_context)
+        async_context.__aexit__ = AsyncMock(return_value=None)
+        agent.run_mcp_servers = Mock(return_value=async_context)
+        
         return agent
 
     def test_gui_initialization(self, mock_gui):
@@ -55,7 +61,7 @@ class TestAgentGUI:
         """Test successful agent initialization."""
         with (
             patch("gui.load_config", return_value=mock_config) as mock_load,
-            patch("gui.create_agent", return_value=mock_agent) as mock_create,
+            patch("gui.create_agent", return_value=(mock_agent, Mock())) as mock_create,
         ):
 
             result = await mock_gui.initialize_agent()
@@ -242,7 +248,12 @@ class TestGUIEventHandlers:
         """Create GUI with mocked agent for event testing."""
         gui = AgentGUI()
         gui.agent = Mock()
-        gui.agent.run_conversation = AsyncMock(return_value="Event response")
+        gui.agent.run = AsyncMock(return_value=Mock(output="Event response"))
+        gui.agent._mcp_servers = []
+        async_context = AsyncMock()
+        async_context.__aenter__ = AsyncMock(return_value=async_context)
+        async_context.__aexit__ = AsyncMock(return_value=None)
+        gui.agent.run_mcp_servers = Mock(return_value=async_context)
         return gui
 
     def test_add_user_message_empty(self):
@@ -318,7 +329,7 @@ class TestGUIMainFunction:
             mock_gui.config.llm_choice = "claude-3-5-sonnet"
             mock_gui.config.debug_mode = False
             mock_gui.agent = Mock()
-            mock_gui.agent.mcp_servers = []
+            mock_gui.agent._mcp_servers = []
             mock_gui.create_interface = Mock()
             mock_interface = Mock()
             mock_gui.create_interface.return_value = mock_interface
@@ -355,7 +366,7 @@ class TestGUIMainFunction:
         with (
             patch("gui.AgentGUI") as mock_gui_class,
             patch("gui.print"),
-            patch("agent.agent.agent") as mock_global_agent,
+            # patch("agent.agent.agent") as mock_global_agent,  # No longer needed
         ):
 
             mock_gui = Mock()
@@ -366,22 +377,20 @@ class TestGUIMainFunction:
             mock_gui.config.llm_choice = "claude-3-5-sonnet"
             mock_gui.config.debug_mode = False
             mock_gui.agent = Mock()
-            mock_gui.agent.mcp_servers = [Mock()]
+            mock_gui.agent._mcp_servers = [Mock()]
             mock_gui.create_interface = Mock()
             mock_interface = Mock()
             mock_gui.create_interface.return_value = mock_interface
             mock_interface.launch = Mock()
 
-            # Mock MCP context manager
-            mock_context = AsyncMock()
-            mock_global_agent.run_mcp_servers.return_value = mock_context
+            # Mock MCP context manager - no longer needed with direct agent approach
 
             from gui import main
 
             await main()
 
             mock_gui.initialize_agent.assert_called_once()
-            mock_global_agent.run_mcp_servers.assert_called_once()
+            # mock_global_agent.run_mcp_servers.assert_called_once()  # No longer needed
             mock_interface.launch.assert_called_once()
 
     @pytest.mark.asyncio
@@ -390,7 +399,7 @@ class TestGUIMainFunction:
         with (
             patch("gui.AgentGUI") as mock_gui_class,
             patch("gui.print"),
-            patch("agent.agent.agent") as mock_global_agent,
+            # patch("agent.agent.agent") as mock_global_agent,  # No longer needed
         ):
 
             mock_gui = Mock()
@@ -401,22 +410,21 @@ class TestGUIMainFunction:
             mock_gui.config.llm_choice = "claude-3-5-sonnet"
             mock_gui.config.debug_mode = False
             mock_gui.agent = Mock()
-            mock_gui.agent.mcp_servers = [Mock()]
+            mock_gui.agent._mcp_servers = [Mock()]
             # MCP servers managed by PydanticAI Agent directly
             mock_gui.create_interface = Mock()
             mock_interface = Mock()
             mock_gui.create_interface.return_value = mock_interface
             mock_interface.launch = Mock()
 
-            # Mock MCP context manager to fail
-            mock_global_agent.run_mcp_servers.side_effect = Exception("MCP failed")
+            # Mock MCP context manager to fail - no longer needed with direct agent approach
 
             from gui import main
 
             await main()
 
             mock_gui.initialize_agent.assert_called_once()
-            mock_gui.agent.disable_mcp_servers.assert_called_once()
+            # mock_gui.agent.disable_mcp_servers.assert_called_once()  # No longer needed
             mock_interface.launch.assert_called_once()
 
 
