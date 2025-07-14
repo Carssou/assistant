@@ -240,7 +240,7 @@ class TestGUIEventHandlers:
     def test_add_user_message_empty(self):
         """Test adding empty user message."""
         from gui import AgentGUI
-        gui = AgentGUI()
+        AgentGUI()
 
         # Simulate the add_user_message function logic
         message = ""
@@ -260,7 +260,7 @@ class TestGUIEventHandlers:
     def test_add_user_message_valid(self):
         """Test adding valid user message."""
         from gui import AgentGUI
-        gui = AgentGUI()
+        AgentGUI()
 
         # Simulate the add_user_message function logic
         message = "Test message"
@@ -299,7 +299,7 @@ class TestGUIMainFunction:
     async def test_main_agent_init_success(self):
         """Test main function with successful agent initialization."""
         with patch('gui.AgentGUI') as mock_gui_class, \
-             patch('gui.print') as mock_print:
+             patch('gui.print'):
 
             mock_gui = Mock()
             mock_gui_class.return_value = mock_gui
@@ -343,7 +343,7 @@ class TestGUIMainFunction:
     async def test_main_with_mcp_servers(self):
         """Test main function with MCP servers enabled."""
         with patch('gui.AgentGUI') as mock_gui_class, \
-             patch('gui.print') as mock_print, \
+             patch('gui.print'), \
              patch('agent.agent.agent') as mock_global_agent:
 
             mock_gui = Mock()
@@ -375,7 +375,7 @@ class TestGUIMainFunction:
     async def test_main_mcp_servers_fail(self):
         """Test main function when MCP servers fail to start."""
         with patch('gui.AgentGUI') as mock_gui_class, \
-             patch('gui.print') as mock_print, \
+             patch('gui.print'), \
              patch('agent.agent.agent') as mock_global_agent:
 
             mock_gui = Mock()

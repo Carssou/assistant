@@ -20,10 +20,10 @@ from mcp_servers.configs import create_all_mcp_servers
 async def create_agent(config: AgentConfig | None = None) -> tuple[Agent[AgentDependencies], AgentDependencies]:
     """
     Create PydanticAI agent with dependencies.
-    
+
     Args:
         config: Optional agent configuration. If None, loads from environment.
-        
+
     Returns:
         Tuple of (agent, dependencies) - agent needs dependencies to be useful
     """
@@ -51,16 +51,16 @@ async def create_agent(config: AgentConfig | None = None) -> tuple[Agent[AgentDe
     async def take_screenshot(ctx: RunContext[AgentDependencies], quality: int = 75):
         """
         Take a screenshot for visual analysis and assistance.
-        
-        This tool captures the current screen and returns it as a base64-encoded image 
-        that can be analyzed by the AI. The image quality is automatically optimized 
+
+        This tool captures the current screen and returns it as a base64-encoded image
+        that can be analyzed by the AI. The image quality is automatically optimized
         based on the model being used to ensure efficient processing.
-        
+
         Args:
             ctx: The context including agent dependencies
             quality: Image quality (1-100, default 75). Lower values for faster processing,
                     higher values for better detail. Automatically adjusted for smaller models.
-            
+
         Returns:
             BinaryContent with image data for compatible models, or text analysis for Nova models
         """
@@ -86,11 +86,11 @@ async def create_agent(config: AgentConfig | None = None) -> tuple[Agent[AgentDe
     async def take_region_screenshot(ctx: RunContext[AgentDependencies], x: int, y: int, width: int, height: int, quality: int = 85):
         """
         Take a screenshot of a specific rectangular region of the screen.
-        
-        This tool allows for precise capture of specific areas of the screen, useful 
-        when you need to focus on particular UI elements, windows, or screen regions 
+
+        This tool allows for precise capture of specific areas of the screen, useful
+        when you need to focus on particular UI elements, windows, or screen regions
         without capturing the entire display.
-        
+
         Args:
             ctx: The context including agent dependencies
             x: Left coordinate of the region (pixels from left edge)
@@ -98,7 +98,7 @@ async def create_agent(config: AgentConfig | None = None) -> tuple[Agent[AgentDe
             width: Width of the region in pixels
             height: Height of the region in pixels
             quality: Image quality (1-100, default 85)
-            
+
         Returns:
             BinaryContent with image data of the specified region or text analysis for Nova models
         """
@@ -126,14 +126,14 @@ async def create_agent(config: AgentConfig | None = None) -> tuple[Agent[AgentDe
     async def get_screen_info(ctx: RunContext[AgentDependencies]) -> dict[str, Any]:
         """
         Get information about the current screen/desktop environment.
-        
-        This tool provides metadata about the user's display setup, including screen 
-        dimensions and cursor position. Useful for understanding the user's workspace 
+
+        This tool provides metadata about the user's display setup, including screen
+        dimensions and cursor position. Useful for understanding the user's workspace
         and providing context-aware assistance.
-        
+
         Args:
             ctx: The context including agent dependencies
-            
+
         Returns:
             Dictionary containing:
             - screen_size: Tuple of (width, height) in pixels

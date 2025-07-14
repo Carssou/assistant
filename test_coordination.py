@@ -16,11 +16,11 @@ from agent.agent import create_agent
 async def test_coordination_workflow(query: str, expected_tools: list[str]) -> dict[str, Any]:
     """
     Test a coordination workflow with timing and tool usage tracking.
-    
+
     Args:
         query: The user query to test
         expected_tools: List of tools expected to be used
-        
+
     Returns:
         Dictionary with test results
     """

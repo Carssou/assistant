@@ -33,7 +33,6 @@ class TestMultiToolCoordination:
         agent, deps = agent_setup
 
         # Mock the workflow execution
-        query = "Research AI agents and create notes with follow-up tasks"
 
         # This would involve: searxng_web_search → create_note → todoist_create_task
         # In real test, we'd verify the agent makes these tool calls in sequence
@@ -45,7 +44,6 @@ class TestMultiToolCoordination:
         """Test video processing → study note creation workflow."""
         agent, deps = agent_setup
 
-        query = "Analyze YouTube video and create study materials"
 
         # Expected flow: get-video-info → create_note → todoist_create_task
         assert agent is not None
@@ -56,7 +54,6 @@ class TestMultiToolCoordination:
         """Test multiple search → synthesis → organized notes."""
         agent, deps = agent_setup
 
-        query = "Compare PydanticAI vs LangChain with comprehensive analysis"
 
         # Expected: multiple searxng_web_search → web_url_read → create_note
         assert agent is not None
@@ -67,7 +64,6 @@ class TestMultiToolCoordination:
         """Test search → read → organize → link workflow."""
         agent, deps = agent_setup
 
-        query = "Find MCP server information and organize in knowledge base"
 
         # Expected: searxng_web_search → web_url_read → search_vault → create_note → edit_note
         assert agent is not None
@@ -80,7 +76,6 @@ class TestMultiToolCoordination:
 
         # Simulate scenario where search works but note creation fails
         # Agent should handle gracefully and provide partial results
-        query = "Research topic but simulate note creation failure"
 
         assert agent is not None
         assert agent is not None
@@ -92,7 +87,6 @@ class TestMultiToolCoordination:
 
         # Simulate Todoist server being down
         # Agent should complete research and notes but skip task creation
-        query = "Complete workflow with task server unavailable"
 
         assert agent is not None
         assert agent is not None

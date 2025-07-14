@@ -8,7 +8,7 @@ using actual .env configuration, not mocked responses.
 import pytest
 
 from agent.agent import create_agent
-from config.settings import LLMProvider, load_config
+from config.settings import AgentConfig, LLMProvider, load_config
 
 
 class TestRealAgentIntegration:

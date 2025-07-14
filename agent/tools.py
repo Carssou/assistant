@@ -1,7 +1,7 @@
 """
 Tools for the PydanticAI agent.
 
-This module contains the actual tool implementation functions that will be 
+This module contains the actual tool implementation functions that will be
 imported and wrapped with @agent.tool decorators in agent.py.
 Following PydanticAI patterns from the reference implementation.
 """
@@ -63,14 +63,14 @@ def _save_screenshot(data_url: str, prefix: str = "screenshot") -> str:
 async def take_screenshot_tool(deps: AgentDependencies, quality: int = 75) -> BinaryContent:
     """
     Take a screenshot for analysis.
-    
+
     Args:
         deps: Agent dependencies containing config and other resources
         quality: Image quality (1-100, default 75)
-        
+
     Returns:
         BinaryContent with the screenshot image
-        
+
     Raises:
         RuntimeError: If screenshot capture fails
     """
@@ -95,24 +95,24 @@ async def take_screenshot_tool(deps: AgentDependencies, quality: int = 75) -> Bi
         return BinaryContent(data=image_bytes, media_type="image/jpeg")
     except Exception as e:
         # For errors, we can't return BinaryContent, so raise an exception
-        raise RuntimeError(f"Error taking screenshot: {str(e)}")
+        raise RuntimeError(f"Error taking screenshot: {str(e)}") from e
 
 
 async def take_region_screenshot_tool(deps: AgentDependencies, x: int, y: int, width: int, height: int, quality: int = 85) -> BinaryContent:
     """
     Take a screenshot of a specific screen region.
-    
+
     Args:
         deps: Agent dependencies
         x: Left coordinate of region
-        y: Top coordinate of region  
+        y: Top coordinate of region
         width: Width of region
         height: Height of region
         quality: Image quality (1-100, default 85)
-        
+
     Returns:
         BinaryContent with the region screenshot image
-        
+
     Raises:
         RuntimeError: If region screenshot capture fails
     """
@@ -120,16 +120,16 @@ async def take_region_screenshot_tool(deps: AgentDependencies, x: int, y: int, w
         image_bytes = take_region_screenshot(x, y, width, height, quality)
         return BinaryContent(data=image_bytes, media_type="image/jpeg")
     except Exception as e:
-        raise RuntimeError(f"Error taking region screenshot: {str(e)}")
+        raise RuntimeError(f"Error taking region screenshot: {str(e)}") from e
 
 
 async def get_screen_info_tool(deps: AgentDependencies) -> dict[str, Any]:
     """
     Get information about the current screen/desktop.
-    
+
     Args:
         deps: Agent dependencies
-        
+
     Returns:
         Dictionary with screen dimensions and cursor position
     """

@@ -112,10 +112,10 @@ class AgentConfig(BaseSettings):
 def create_model_instance(config: AgentConfig):
     """
     Create a PydanticAI model instance based on configuration.
-    
+
     Args:
         config: Agent configuration
-        
+
     Returns:
         PydanticAI model instance
     """
@@ -185,10 +185,10 @@ def create_model_instance(config: AgentConfig):
 def get_model_string(config: AgentConfig) -> str:
     """
     Get the model string for PydanticAI based on configuration.
-    
+
     Args:
         config: Agent configuration
-        
+
     Returns:
         Model string for PydanticAI
     """
@@ -203,7 +203,7 @@ def get_model_string(config: AgentConfig) -> str:
 def load_config() -> AgentConfig:
     """
     Load configuration from environment variables and .env file.
-    
+
     Returns:
         Loaded agent configuration
     """

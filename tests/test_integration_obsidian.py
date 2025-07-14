@@ -149,7 +149,7 @@ This is a test note with some content.""")
                         pytest.skip(f"obsidian-mcp server not available: {e}")
                     else:
                         # This is a real error we should investigate
-                        raise AssertionError(f"MCP server integration failed: {e}")
+                        raise AssertionError(f"MCP server integration failed: {e}") from e
 
                 # Clean up
                 await agent.close()

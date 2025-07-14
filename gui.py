@@ -15,7 +15,7 @@ from config.settings import AgentConfig, load_config
 class AgentGUI:
     """
     Gradio GUI wrapper for the productivity agent.
-    
+
     Provides a web-based chat interface with streaming responses,
     configuration management, and session handling.
     """
@@ -31,7 +31,7 @@ class AgentGUI:
     async def initialize_agent(self) -> bool:
         """
         Initialize the agent with current configuration.
-        
+
         Returns:
             True if initialization successful, False otherwise
         """
@@ -50,11 +50,11 @@ class AgentGUI:
     ) -> list:
         """
         Generate complete chat response with MCP error handling.
-        
+
         Args:
             message: User message
             history: Conversation history
-            
+
         Returns:
             Updated history with complete response
         """
@@ -160,7 +160,7 @@ class AgentGUI:
     def get_config_info(self) -> str:
         """
         Get current configuration information.
-        
+
         Returns:
             Formatted configuration string
         """
@@ -179,7 +179,7 @@ class AgentGUI:
     def create_interface(self) -> gr.Blocks:
         """
         Create the Gradio interface.
-        
+
         Returns:
             Configured Gradio Blocks interface
         """
@@ -204,7 +204,7 @@ class AgentGUI:
             gr.Markdown(
                 """
                 # 🤖 Productivity Agent
-                
+
                 Your AI assistant with access to notes, web search, tasks, and video analysis.
                 """
             )
@@ -258,15 +258,15 @@ class AgentGUI:
                     **Research & Notes:**
                     - "Research latest AI developments and create notes"
                     - "Search for productivity tools and organize findings"
-                    
+
                     **Task Management:**
-                    - "Show my current Todoist tasks" 
+                    - "Show my current Todoist tasks"
                     - "Add task to review documentation by Friday"
-                    
+
                     **Video Learning:**
                     - "Analyze this YouTube video: [URL]"
                     - "Create study notes from this tutorial"
-                    
+
                     **Web Search:**
                     - "Find recent news about AI developments"
                     - "Search for Python best practices"

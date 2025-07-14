@@ -9,10 +9,10 @@ from PIL import Image
 def take_screenshot(quality: int = 60) -> bytes:
     """
     Take a screenshot and return as raw image bytes.
-    
+
     Args:
         quality: JPEG quality (1-100, default 60). Higher values produce better quality but larger files.
-        
+
     Returns:
         Raw JPEG image bytes of the screenshot.
     """
@@ -53,14 +53,14 @@ def take_screenshot(quality: int = 60) -> bytes:
 def take_region_screenshot(x: int, y: int, width: int, height: int, quality: int = 85) -> bytes:
     """
     Take a screenshot of a specific rectangular region.
-    
+
     Args:
         x: Left coordinate of the region in pixels.
         y: Top coordinate of the region in pixels.
         width: Width of the region in pixels.
         height: Height of the region in pixels.
         quality: JPEG quality (1-100, default 85). Higher values produce better quality but larger files.
-        
+
     Returns:
         Raw JPEG image bytes of the specified region.
     """
@@ -79,7 +79,7 @@ def take_region_screenshot(x: int, y: int, width: int, height: int, quality: int
 def get_screen_size() -> dict[str, int]:
     """
     Get the current screen dimensions.
-    
+
     Returns:
         Dictionary containing screen width and height in pixels.
         Format: {"width": int, "height": int}
@@ -91,7 +91,7 @@ def get_screen_size() -> dict[str, int]:
 def get_cursor_position() -> dict[str, int]:
     """
     Get the current mouse cursor position.
-    
+
     Returns:
         Dictionary containing cursor x and y coordinates in pixels.
         Format: {"x": int, "y": int}

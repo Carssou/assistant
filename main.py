@@ -115,7 +115,7 @@ async def run_single_query(query: str):
 def main(query: str | None, config_test: bool):
     """
     Productivity Agent CLI.
-    
+
     Run the agent in interactive mode or execute a single query.
     """
     if config_test:

@@ -19,7 +19,7 @@ from config.settings import AgentConfig
 class AgentDependencies:
     """
     Dependency injection container for agent shared resources.
-    
+
     This follows PydanticAI patterns for dependency injection,
     providing access to configuration, HTTP client, logging, and
     other shared resources throughout the agent.
@@ -48,10 +48,10 @@ class AgentDependencies:
 async def create_agent_dependencies(config: AgentConfig) -> AgentDependencies:
     """
     Create and initialize agent dependencies.
-    
+
     Args:
         config: Agent configuration
-        
+
     Returns:
         Initialized dependencies container
     """
@@ -92,10 +92,10 @@ async def create_agent_dependencies(config: AgentConfig) -> AgentDependencies:
 def create_sync_dependencies(config: AgentConfig) -> AgentDependencies:
     """
     Create dependencies synchronously (for testing or simple cases).
-    
+
     Args:
         config: Agent configuration
-        
+
     Returns:
         Dependencies container with sync HTTP client
     """

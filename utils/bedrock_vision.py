@@ -22,17 +22,17 @@ async def analyze_image_with_bedrock(
 ) -> str:
     """
     Analyze an image using direct Bedrock API call.
-    
+
     Args:
         image_bytes: Raw image bytes (JPEG format) from screenshot tools
         prompt: Text prompt for analysis
         config: Agent configuration with model from .env
         max_tokens: Maximum tokens for response (default 1000)
         temperature: Temperature for response generation (default 0.3)
-        
+
     Returns:
         Text response from the model
-        
+
     Raises:
         Exception: If Bedrock API call fails or image analysis encounters errors
     """
@@ -97,10 +97,10 @@ async def analyze_image_with_bedrock(
 def should_use_bedrock_direct(config: AgentConfig) -> bool:
     """
     Check if we should use direct Bedrock API instead of PydanticAI.
-    
+
     Args:
         config: Agent configuration (loads from .env)
-        
+
     Returns:
         True if should use direct API, False to use PydanticAI
     """
@@ -118,12 +118,12 @@ async def analyze_full_screenshot_with_bedrock(
 ) -> str:
     """
     Analyze a full screenshot with Bedrock API.
-    
+
     Args:
         image_bytes: Raw image bytes from screenshot
         config: Agent configuration
         custom_prompt: Optional custom prompt, uses default if None
-        
+
     Returns:
         Text analysis of the screenshot
     """
@@ -142,7 +142,7 @@ async def analyze_region_screenshot_with_bedrock(
 ) -> str:
     """
     Analyze a region screenshot with Bedrock API.
-    
+
     Args:
         image_bytes: Raw image bytes from region screenshot
         x: Left coordinate of the region
@@ -151,7 +151,7 @@ async def analyze_region_screenshot_with_bedrock(
         height: Height of the region
         config: Agent configuration
         custom_prompt: Optional custom prompt, uses default if None
-        
+
     Returns:
         Text analysis of the screenshot region
     """
@@ -162,10 +162,10 @@ async def analyze_region_screenshot_with_bedrock(
 def test_bedrock_config(config: AgentConfig) -> str:
     """
     Test if Bedrock configuration is valid for vision analysis.
-    
+
     Args:
         config: Agent configuration
-        
+
     Returns:
         Status message about configuration
     """

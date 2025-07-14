@@ -14,10 +14,10 @@ from config.settings import AgentConfig
 def create_obsidian_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
     """
     Create Obsidian MCP server instance.
-    
+
     Args:
         config: Agent configuration containing vault path
-        
+
     Returns:
         MCPServerStdio instance or None if vault path not configured
     """
@@ -42,10 +42,10 @@ def create_obsidian_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
 def create_searxng_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
     """
     Create SearXNG MCP server instance.
-    
+
     Args:
         config: Agent configuration containing SearXNG settings
-        
+
     Returns:
         MCPServerStdio instance or None if not configured
     """
@@ -70,10 +70,10 @@ def create_searxng_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
 def create_todoist_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
     """
     Create Todoist MCP server instance.
-    
+
     Args:
         config: Agent configuration containing Todoist settings
-        
+
     Returns:
         MCPServerStdio instance or None if not configured
     """
@@ -90,10 +90,10 @@ def create_todoist_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
 def create_youtube_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
     """
     Create YouTube MCP server instance.
-    
+
     Args:
         config: Agent configuration containing YouTube settings
-        
+
     Returns:
         MCPServerStdio instance or None if not configured
     """
@@ -109,10 +109,10 @@ def create_youtube_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
 def create_all_mcp_servers(config: AgentConfig) -> list[MCPServerStdio]:
     """
     Create all configured MCP servers.
-    
+
     Args:
         config: Agent configuration
-        
+
     Returns:
         List of configured MCP server instances
     """

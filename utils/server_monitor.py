@@ -52,7 +52,7 @@ class ServerHealthMonitor:
     def __init__(self, check_interval: int = 60):
         """
         Initialize server health monitor.
-        
+
         Args:
             check_interval: Seconds between health checks
         """
@@ -66,7 +66,7 @@ class ServerHealthMonitor:
     async def start_monitoring(self, server_names: list[str]):
         """
         Start monitoring MCP servers.
-        
+
         Args:
             server_names: List of server names to monitor
         """
@@ -118,7 +118,7 @@ class ServerHealthMonitor:
     async def _check_server_health(self, server_name: str):
         """
         Check health of a specific server.
-        
+
         Args:
             server_name: Name of the server to check
         """
@@ -161,10 +161,10 @@ class ServerHealthMonitor:
     async def _simulate_server_check(self, server_name: str) -> bool:
         """
         Simulate server health check.
-        
+
         Args:
             server_name: Name of server to check
-            
+
         Returns:
             True if server is healthy, False otherwise
         """
@@ -178,10 +178,10 @@ class ServerHealthMonitor:
     def get_server_status(self, server_name: str) -> ServerHealthMetrics | None:
         """
         Get current status of a specific server.
-        
+
         Args:
             server_name: Name of server
-            
+
         Returns:
             Server health metrics or None if not found
         """
@@ -215,7 +215,7 @@ class ServerHealthMonitor:
     def record_workflow_success(self, workflow_time: float, tools_used: list[str]):
         """
         Record a successful workflow completion.
-        
+
         Args:
             workflow_time: Time taken for workflow in seconds
             tools_used: List of tools used in workflow
@@ -249,7 +249,7 @@ class ServerHealthMonitor:
     def record_workflow_failure(self, error: str, tools_attempted: list[str]):
         """
         Record a failed workflow.
-        
+
         Args:
             error: Error message
             tools_attempted: List of tools that were attempted
@@ -263,10 +263,10 @@ class ServerHealthMonitor:
     def _get_server_for_tool(self, tool_name: str) -> str | None:
         """
         Get server name for a given tool.
-        
+
         Args:
             tool_name: Name of the tool
-            
+
         Returns:
             Server name or None if not found
         """

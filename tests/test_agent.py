@@ -43,7 +43,7 @@ class TestProductivityAgent:
         """Create a ProductivityAgent with mocked dependencies."""
         with patch('agent.agent.create_model_instance') as mock_model, \
              patch('agent.agent.create_all_mcp_servers') as mock_servers, \
-             patch('agent.agent.register_tools') as mock_register, \
+             patch('agent.agent.register_tools'), \
              patch('agent.agent.Agent') as mock_agent_class:
 
             mock_model.return_value = Mock()
@@ -73,7 +73,7 @@ class TestProductivityAgent:
             mock_agent_instance = Mock()
             mock_agent_class.return_value = mock_agent_instance
 
-            agent = ProductivityAgent(mock_dependencies)
+            ProductivityAgent(mock_dependencies)
 
             # Verify setup was called
             mock_model.assert_called_once_with(mock_dependencies.config)
@@ -262,7 +262,7 @@ class TestMCPIntegration:
         """Create a ProductivityAgent with mocked dependencies."""
         with patch('agent.agent.create_model_instance') as mock_model, \
              patch('agent.agent.create_all_mcp_servers') as mock_servers, \
-             patch('agent.agent.register_tools') as mock_register, \
+             patch('agent.agent.register_tools'), \
              patch('agent.agent.Agent') as mock_agent_class:
 
             mock_model.return_value = Mock()

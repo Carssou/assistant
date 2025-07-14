@@ -49,7 +49,7 @@ class GracefulDegradationManager:
     def __init__(self, server_monitor: ServerHealthMonitor | None = None):
         """
         Initialize degradation manager.
-        
+
         Args:
             server_monitor: Optional server health monitor
         """
@@ -133,18 +133,18 @@ class GracefulDegradationManager:
     def get_available_tools(self) -> set[str]:
         """
         Get set of currently available tools based on server health.
-        
+
         Returns:
             Set of available tool names
         """
         if not self.server_monitor:
             # If no monitor, assume all tools are available
-            return set([
+            return {
                 "create_note", "read_note", "search_vault", "edit_note",
                 "searxng_web_search", "web_url_read",
                 "todoist_create_task", "todoist_get_tasks",
                 "get-video-info"
-            ])
+            }
 
         available_tools = set()
         healthy_servers = self.server_monitor.get_healthy_servers()
@@ -169,10 +169,10 @@ class GracefulDegradationManager:
     def plan_workflow_with_degradation(self, intended_workflow: list[str]) -> tuple[list[str], list[str]]:
         """
         Plan a workflow with graceful degradation.
-        
+
         Args:
             intended_workflow: List of intended tools to use
-            
+
         Returns:
             Tuple of (executable_workflow, degradation_notes)
         """
@@ -201,11 +201,11 @@ class GracefulDegradationManager:
     def _find_alternative(self, unavailable_tool: str, available_tools: set[str]) -> tuple[str | None, str]:
         """
         Find an alternative for an unavailable tool.
-        
+
         Args:
             unavailable_tool: The tool that is not available
             available_tools: Set of currently available tools
-            
+
         Returns:
             Tuple of (alternative_tool, explanation) or (None, reason)
         """
@@ -234,11 +234,11 @@ class GracefulDegradationManager:
                                 user_query: str) -> tuple[bool, list[str], str]:
         """
         Execute a workflow with degradation handling.
-        
+
         Args:
             workflow_pattern: Name of workflow pattern to execute
             user_query: User's original query
-            
+
         Returns:
             Tuple of (success, executed_tools, result_message)
         """
@@ -295,7 +295,7 @@ class GracefulDegradationManager:
     def get_degradation_report(self) -> dict[str, Any]:
         """
         Get a report on current degradation status.
-        
+
         Returns:
             Dictionary with degradation status information
         """
@@ -343,7 +343,7 @@ class GracefulDegradationManager:
                            capability_match: float, notes: str = ""):
         """
         Add a new tool alternative.
-        
+
         Args:
             primary: Primary tool name
             alternative: Alternative tool name

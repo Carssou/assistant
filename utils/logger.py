@@ -1,7 +1,7 @@
 """
 Logging configuration using Langfuse.
 
-This module provides centralized logging and observability configuration 
+This module provides centralized logging and observability configuration
 for the PydanticAI agent using Langfuse for tracing and monitoring.
 """
 
@@ -21,14 +21,14 @@ def setup_logging(
 ) -> Langfuse | None:
     """
     Configure logging and Langfuse observability.
-    
+
     Args:
         log_level: Python logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         debug_mode: Enable debug mode for more verbose logging
         langfuse_secret_key: Langfuse secret key for tracing
         langfuse_public_key: Langfuse public key for tracing
         langfuse_host: Langfuse host URL
-        
+
     Returns:
         Langfuse client if credentials provided, None otherwise
     """
@@ -104,10 +104,10 @@ def setup_logging(
 def get_logger(name: str) -> logging.Logger:
     """
     Get a logger instance for a specific module.
-    
+
     Args:
         name: Logger name (typically __name__)
-        
+
     Returns:
         Logger instance
     """
@@ -123,14 +123,14 @@ def setup_agent_logging(
 ) -> Langfuse | None:
     """
     Set up logging specifically for the agent application.
-    
+
     Args:
         log_level: Logging level
         debug_mode: Enable debug mode
         langfuse_secret_key: Langfuse secret key
         langfuse_public_key: Langfuse public key
         langfuse_host: Langfuse host URL
-        
+
     Returns:
         Langfuse client if available
     """
