@@ -6,6 +6,7 @@ and handles complex workflows that span multiple tools.
 """
 
 import asyncio
+import os
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -22,10 +23,12 @@ class TestMultiToolCoordination:
     @pytest_asyncio.fixture
     async def agent_setup(self):
         """Set up agent with mocked dependencies for testing."""
-        config = AgentConfig(_env_file=None)
-        config.obsidian_vault_path = None  # Disable vault validation
-        agent, deps = await create_agent(config)
-        return agent, deps
+        # Use clean environment for this test
+        with patch.dict(os.environ, {"LLM_PROVIDER": "aws"}, clear=True):
+            config = AgentConfig(_env_file=None)
+            config.obsidian_vault_path = None  # Disable vault validation
+            agent, deps = await create_agent(config)
+            return agent, deps
 
     @pytest.mark.asyncio
     async def test_research_workflow_coordination(self, agent_setup):
@@ -177,6 +180,16 @@ class TestToolCoordinationLogic:
 
 class TestPerformanceMetrics:
     """Test performance aspects of multi-tool coordination."""
+
+    @pytest_asyncio.fixture
+    async def agent_setup(self):
+        """Set up agent with mocked dependencies for testing."""
+        # Use clean environment for this test
+        with patch.dict(os.environ, {"LLM_PROVIDER": "aws"}, clear=True):
+            config = AgentConfig(_env_file=None)
+            config.obsidian_vault_path = None  # Disable vault validation
+            agent, deps = await create_agent(config)
+            return agent, deps
 
     @pytest.mark.asyncio
     async def test_response_time_acceptable(self, agent_setup):

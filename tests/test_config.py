@@ -70,7 +70,6 @@ class TestAgentConfig:
                 config = AgentConfig(_env_file=None)
                 assert config.debug_mode == expected, f"Failed for '{env_value}'"
 
-
     def test_llm_provider_enum(self):
         """Test LLM provider enum validation."""
         # Valid providers
@@ -109,12 +108,14 @@ class TestModelString:
 
     def test_unsupported_provider(self):
         """Test error handling for unsupported provider."""
-        config = AgentConfig(_env_file=None)
-        # Manually set an invalid provider to test error handling
-        config.llm_provider = "invalid"
+        # Use clean environment for this test
+        with patch.dict(os.environ, {"LLM_PROVIDER": "aws"}, clear=True):
+            config = AgentConfig(_env_file=None)
+            # Manually set an invalid provider to test error handling
+            config.llm_provider = "invalid"
 
-        with pytest.raises(ValueError, match="Unsupported LLM provider"):
-            get_model_string(config)
+            with pytest.raises(ValueError, match="Unsupported LLM provider"):
+                get_model_string(config)
 
 
 class TestLoadConfig:
@@ -122,8 +123,10 @@ class TestLoadConfig:
 
     def test_load_config_returns_agent_config(self):
         """Test that load_config returns an AgentConfig instance."""
-        config = load_config()
-        assert isinstance(config, AgentConfig)
+        # Use clean environment for this test
+        with patch.dict(os.environ, {"LLM_PROVIDER": "aws"}, clear=True):
+            config = load_config()
+            assert isinstance(config, AgentConfig)
 
     @patch("config.settings.AgentConfig")
     def test_load_config_calls_agent_config(self, mock_agent_config):
