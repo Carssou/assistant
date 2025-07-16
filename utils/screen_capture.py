@@ -1,9 +1,17 @@
 """Simple screen capture functionality."""
 
 import io
+import os
+import sys
 
-import pyautogui
-from PIL import Image
+try:
+    import pyautogui
+    from PIL import Image
+    PYAUTOGUI_AVAILABLE = True
+except ImportError:
+    PYAUTOGUI_AVAILABLE = False
+    pyautogui = None
+    Image = None
 
 
 def take_screenshot(quality: int = 60) -> bytes:
@@ -15,7 +23,15 @@ def take_screenshot(quality: int = 60) -> bytes:
 
     Returns:
         Raw JPEG image bytes of the screenshot.
+    Raises:
+        ImportError: If pyautogui is not available (e.g., in CI environment).
     """
+    if not PYAUTOGUI_AVAILABLE:
+        raise ImportError("pyautogui is not available in this environment (likely CI/headless)")
+
+    if os.getenv('DISPLAY') is None and sys.platform.startswith('linux'):
+        raise ImportError("No display available (headless environment)")
+
     pyautogui.FAILSAFE = False
     screenshot = pyautogui.screenshot()
 
@@ -63,7 +79,15 @@ def take_region_screenshot(x: int, y: int, width: int, height: int, quality: int
 
     Returns:
         Raw JPEG image bytes of the specified region.
+    Raises:
+        ImportError: If pyautogui is not available (e.g., in CI environment).
     """
+    if not PYAUTOGUI_AVAILABLE:
+        raise ImportError("pyautogui is not available in this environment (likely CI/headless)")
+
+    if os.getenv('DISPLAY') is None and sys.platform.startswith('linux'):
+        raise ImportError("No display available (headless environment)")
+
     pyautogui.FAILSAFE = False
     screenshot = pyautogui.screenshot(region=(x, y, width, height))
 
@@ -83,7 +107,15 @@ def get_screen_size() -> dict[str, int]:
     Returns:
         Dictionary containing screen width and height in pixels.
         Format: {"width": int, "height": int}
+    Raises:
+        ImportError: If pyautogui is not available (e.g., in CI environment).
     """
+    if not PYAUTOGUI_AVAILABLE:
+        raise ImportError("pyautogui is not available in this environment (likely CI/headless)")
+
+    if os.getenv('DISPLAY') is None and sys.platform.startswith('linux'):
+        raise ImportError("No display available (headless environment)")
+
     size = pyautogui.size()
     return {"width": size.width, "height": size.height}
 
@@ -95,6 +127,14 @@ def get_cursor_position() -> dict[str, int]:
     Returns:
         Dictionary containing cursor x and y coordinates in pixels.
         Format: {"x": int, "y": int}
+    Raises:
+        ImportError: If pyautogui is not available (e.g., in CI environment).
     """
+    if not PYAUTOGUI_AVAILABLE:
+        raise ImportError("pyautogui is not available in this environment (likely CI/headless)")
+
+    if os.getenv('DISPLAY') is None and sys.platform.startswith('linux'):
+        raise ImportError("No display available (headless environment)")
+
     x, y = pyautogui.position()
     return {"x": x, "y": y}
