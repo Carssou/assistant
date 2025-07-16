@@ -187,17 +187,70 @@ python gui.py
 ```
 
 ### Testing
+
+#### Core Testing Commands
 ```bash
 # Run all tests
 pytest tests/
 
 # Run specific test files
-pytest tests/test_agent.py          # Core agent tests
-pytest tests/test_real_integration.py  # Real integration tests
-pytest tests/test_gui_integration.py   # GUI integration tests
+pytest tests/test_agent.py                    # Core agent tests
+pytest tests/test_real_integration.py         # Real integration tests
+pytest tests/test_gui_integration.py          # GUI integration tests
+pytest tests/test_multi_tool_coordination.py  # Multi-tool coordination tests
 
-# Run with verbose output
+# Run with verbose output and show print statements
 pytest tests/ -v -s
+
+# Run tests with coverage report
+pytest tests/ --cov=. --cov-report=html
+
+# Run specific test class or method
+pytest tests/test_agent.py::TestAgent::test_agent_initialization -v
+pytest tests/test_multi_tool_coordination.py::TestMultiToolCoordination -v
+```
+
+#### Quality Assurance Commands
+```bash
+# Run code formatting
+black .
+
+# Run linting
+ruff check .
+
+# Auto-fix linting issues
+ruff check --fix .
+
+# Run type checking
+mypy --ignore-missing-imports agent/ utils/ config/
+
+# Run all quality checks in sequence
+black . && ruff check --fix . && mypy --ignore-missing-imports agent/ utils/ config/ && pytest tests/ -v
+```
+
+#### Integration Testing
+```bash
+# Test configuration loading
+python main.py --config-test
+
+# Test MCP server integration
+pytest tests/test_real_integration.py -v -s
+
+# Test GUI functionality
+python gui.py  # Then test via web interface at localhost:7860
+```
+
+#### Debugging and Development
+```bash
+# Run single test with detailed output
+pytest tests/test_agent.py::TestAgent::test_agent_initialization -vv -s --tb=long
+
+# Run tests with specific markers
+pytest tests/ -m "not integration" -v  # Skip integration tests
+pytest tests/ -m "asyncio" -v         # Run only async tests
+
+# Run tests with failed tests first
+pytest tests/ --failed-first -v
 ```
 
 ## Important Constraints
