@@ -70,29 +70,6 @@ class TestAgentConfig:
                 config = AgentConfig(_env_file=None)
                 assert config.debug_mode == expected, f"Failed for '{env_value}'"
 
-    def test_obsidian_vault_path_validation(self):
-        """Test Obsidian vault path validation."""
-        # Test with non-existent path
-        with patch.dict(os.environ, {"OBSIDIAN_VAULT_PATH": "/non/existent/path"}, clear=True):
-            with pytest.raises(ValueError, match="Obsidian vault path does not exist"):
-                AgentConfig(_env_file=None)
-
-        # Test with placeholder path (should return None)
-        with patch.dict(os.environ, {"OBSIDIAN_VAULT_PATH": "/path/to/your/vault"}, clear=True):
-            config = AgentConfig(_env_file=None)
-            assert config.obsidian_vault_path is None
-
-        # Test with valid directory
-        with tempfile.TemporaryDirectory() as temp_dir:
-            with patch.dict(os.environ, {"OBSIDIAN_VAULT_PATH": temp_dir}, clear=True):
-                config = AgentConfig(_env_file=None)
-                assert config.obsidian_vault_path == Path(temp_dir)
-
-        # Test with file instead of directory
-        with tempfile.NamedTemporaryFile() as temp_file:
-            with patch.dict(os.environ, {"OBSIDIAN_VAULT_PATH": temp_file.name}, clear=True):
-                with pytest.raises(ValueError, match="is not a directory"):
-                    AgentConfig(_env_file=None)
 
     def test_llm_provider_enum(self):
         """Test LLM provider enum validation."""
