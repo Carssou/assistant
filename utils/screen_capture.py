@@ -7,8 +7,10 @@ import sys
 try:
     import pyautogui
     from PIL import Image
+
     PYAUTOGUI_AVAILABLE = True
-except ImportError:
+except (ImportError, KeyError):
+    # KeyError can occur when pyautogui tries to access DISPLAY env var
     PYAUTOGUI_AVAILABLE = False
     pyautogui = None
     Image = None
@@ -29,7 +31,7 @@ def take_screenshot(quality: int = 60) -> bytes:
     if not PYAUTOGUI_AVAILABLE:
         raise ImportError("pyautogui is not available in this environment (likely CI/headless)")
 
-    if os.getenv('DISPLAY') is None and sys.platform.startswith('linux'):
+    if os.getenv("DISPLAY") is None and sys.platform.startswith("linux"):
         raise ImportError("No display available (headless environment)")
 
     pyautogui.FAILSAFE = False
@@ -85,7 +87,7 @@ def take_region_screenshot(x: int, y: int, width: int, height: int, quality: int
     if not PYAUTOGUI_AVAILABLE:
         raise ImportError("pyautogui is not available in this environment (likely CI/headless)")
 
-    if os.getenv('DISPLAY') is None and sys.platform.startswith('linux'):
+    if os.getenv("DISPLAY") is None and sys.platform.startswith("linux"):
         raise ImportError("No display available (headless environment)")
 
     pyautogui.FAILSAFE = False
@@ -113,7 +115,7 @@ def get_screen_size() -> dict[str, int]:
     if not PYAUTOGUI_AVAILABLE:
         raise ImportError("pyautogui is not available in this environment (likely CI/headless)")
 
-    if os.getenv('DISPLAY') is None and sys.platform.startswith('linux'):
+    if os.getenv("DISPLAY") is None and sys.platform.startswith("linux"):
         raise ImportError("No display available (headless environment)")
 
     size = pyautogui.size()
@@ -133,7 +135,7 @@ def get_cursor_position() -> dict[str, int]:
     if not PYAUTOGUI_AVAILABLE:
         raise ImportError("pyautogui is not available in this environment (likely CI/headless)")
 
-    if os.getenv('DISPLAY') is None and sys.platform.startswith('linux'):
+    if os.getenv("DISPLAY") is None and sys.platform.startswith("linux"):
         raise ImportError("No display available (headless environment)")
 
     x, y = pyautogui.position()
