@@ -5,6 +5,7 @@ This module provides a web-based chat interface using Gradio with streaming supp
 """
 
 import asyncio
+import logging
 
 import gradio as gr
 
@@ -27,6 +28,24 @@ class AgentGUI:
         self.config: AgentConfig | None = None
         self.conversation_history: list[dict[str, str]] = []
         self.mcp_context_active = False
+        self.tool_calls_log = []
+
+        # Set up console logging for tool calls
+        self.setup_console_logging()
+
+    def setup_console_logging(self):
+        """Set up console logging for tool calls."""
+        # Create console handler for tool calls
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter("%(message)s")
+        console_handler.setFormatter(formatter)
+
+        # Add handler to agent.tools logger for console output
+        tool_logger = logging.getLogger("agent.tools")
+        tool_logger.addHandler(console_handler)
+        tool_logger.setLevel(logging.INFO)
+        tool_logger.propagate = False  # Don't propagate to root logger
 
     async def initialize_agent(self) -> bool:
         """
@@ -95,21 +114,43 @@ class AgentGUI:
                 elif msg["role"] == "assistant":
                     chat_history.append(ModelResponse(parts=[TextPart(content=msg["content"])]))
 
+            # Clear tool calls log before running agent
+            self.tool_calls_log = []
+
             # First run - let agent decide if it needs tools
             if hasattr(self.agent, "_mcp_servers") and self.agent._mcp_servers:
                 async with self.agent.run_mcp_servers():
+                    print("🔧 Agent running with MCP servers available")
                     result = await self.agent.run(
                         message, deps=self.deps, message_history=chat_history
                     )
             else:
+                print("🔧 Agent running without MCP servers")
                 result = await self.agent.run(message, deps=self.deps, message_history=chat_history)
 
             response = result.output
 
-            history.append({"role": "assistant", "content": response})
+            # Log completion and any tool usage information
+            try:
+                if hasattr(result, "all_messages") and callable(result.all_messages):
+                    tool_calls = []
+                    for msg in result.all_messages():
+                        if hasattr(msg, "parts"):
+                            for part in msg.parts:
+                                if hasattr(part, "tool_name"):
+                                    tool_calls.append(f"🔧 {part.tool_name}")
 
-            # Log final complete response
-            print(f"\n[FINAL RESPONSE]:\n{response}\n{'='*50}")
+                    if tool_calls:
+                        print(f"✅ Tools used: {', '.join(tool_calls)}")
+                    else:
+                        print("✅ No tools used")
+                else:
+                    print("✅ Response completed")
+            except Exception:
+                # Don't let logging failures break the response
+                print("✅ Response completed")
+
+            history.append({"role": "assistant", "content": response})
             return history
 
         except Exception as e:

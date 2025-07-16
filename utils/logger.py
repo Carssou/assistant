@@ -83,12 +83,22 @@ def setup_logging(
         logging.getLogger("urllib3").setLevel(logging.DEBUG)
         logging.getLogger("urllib3.connectionpool").setLevel(logging.DEBUG)
     else:
-        # Still show HTTP traffic but suppress other noise
-        logging.getLogger("httpx").setLevel(logging.DEBUG)
-        logging.getLogger("httpcore").setLevel(logging.DEBUG)
-        logging.getLogger("botocore").setLevel(logging.DEBUG)
-        logging.getLogger("botocore.httpsession").setLevel(logging.DEBUG)
-        logging.getLogger("botocore.endpoint").setLevel(logging.DEBUG)
+        # Suppress all third-party library noise
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+        logging.getLogger("httpcore").setLevel(logging.WARNING)
+        logging.getLogger("botocore").setLevel(logging.WARNING)
+        logging.getLogger("botocore.httpsession").setLevel(logging.WARNING)
+        logging.getLogger("botocore.endpoint").setLevel(logging.WARNING)
+        logging.getLogger("botocore.hooks").setLevel(logging.WARNING)
+        logging.getLogger("botocore.auth").setLevel(logging.WARNING)
+        logging.getLogger("botocore.parsers").setLevel(logging.WARNING)
+        logging.getLogger("botocore.retryhandler").setLevel(logging.WARNING)
+        logging.getLogger("botocore.utils").setLevel(logging.WARNING)
+        logging.getLogger("botocore.credentials").setLevel(logging.WARNING)
+        logging.getLogger("botocore.loaders").setLevel(logging.WARNING)
+        logging.getLogger("botocore.regions").setLevel(logging.WARNING)
+        logging.getLogger("botocore.client").setLevel(logging.WARNING)
+        logging.getLogger("botocore.configprovider").setLevel(logging.WARNING)
         logging.getLogger("gradio").setLevel(logging.WARNING)
         logging.getLogger("uvicorn").setLevel(logging.WARNING)
 

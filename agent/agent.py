@@ -2,6 +2,7 @@
 PydanticAI agent implementation.
 """
 
+import logging
 from typing import Any
 
 from pydantic_ai import Agent, RunContext
@@ -15,6 +16,20 @@ from agent.tools import (
 )
 from config.settings import AgentConfig, create_model_instance, load_config
 from mcp_servers.configs import create_all_mcp_servers
+
+# Tool call logger for clean output
+tool_logger = logging.getLogger("agent.tools")
+
+
+def log_tool_call(tool_name: str, **kwargs):
+    """Log tool calls in a clean format."""
+    params = ", ".join(f"{k}={v}" for k, v in kwargs.items() if v is not None)
+    tool_logger.info(f"🔧 {tool_name}({params})")
+
+
+def log_tool_result(tool_name: str, result_summary: str = "completed"):
+    """Log tool results in a clean format."""
+    tool_logger.info(f"✅ {tool_name} → {result_summary}")
 
 
 async def create_agent(
@@ -66,13 +81,12 @@ async def create_agent(
         Returns:
             BinaryContent with image data for compatible models, or text analysis for Nova models
         """
-        print("Calling take_screenshot tool")
+        log_tool_call("take_screenshot", quality=quality)
 
         # Check if Nova model - use direct Bedrock API
         from utils.bedrock_vision import should_use_bedrock_direct
 
         if should_use_bedrock_direct(ctx.deps.config):
-            print("Using direct Bedrock API for Nova model")
             from utils.bedrock_vision import analyze_full_screenshot_with_bedrock
             from utils.screen_capture import take_screenshot as take_screenshot_direct
 
@@ -80,10 +94,12 @@ async def create_agent(
             image_bytes = take_screenshot_direct(quality)
             analysis = await analyze_full_screenshot_with_bedrock(image_bytes, ctx.deps.config)
 
-            # For Nova, return the analysis directly instead of BinaryContent
+            log_tool_result("take_screenshot", "analyzed with Bedrock")
             return analysis
 
-        return await take_screenshot_tool(ctx.deps, quality)
+        result = await take_screenshot_tool(ctx.deps, quality)
+        log_tool_result("take_screenshot", "captured and returned")
+        return result
 
     @agent.tool
     async def take_region_screenshot(
