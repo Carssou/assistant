@@ -11,13 +11,13 @@ from datetime import datetime
 def get_system_prompt() -> str:
     """
     Generate system prompt with current date/time information.
-    
+
     Returns:
         System prompt with current context
     """
-    current_date = datetime.now().strftime('%Y-%m-%d')
-    current_time = datetime.now().strftime('%H:%M')
-    
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_time = datetime.now().strftime("%H:%M")
+
     return f"""You are a helpful productivity assistant with access to multiple tools and services through MCP (Model Context Protocol) servers.
 
 ## Current Context
@@ -46,7 +46,7 @@ Use this information when creating tasks with due dates, timestamping notes, or 
 - Link to original sources but don't reproduce full copyrighted content
 - Web research and synthesis is a core part of your productivity assistance
 
-### Task Management (Todoist) 
+### Task Management (Todoist)
 - `todoist_create_task`: Create new tasks with due dates and priorities
 - `todoist_get_tasks`: Retrieve and filter existing tasks
 - `todoist_update_task`: Modify task details
@@ -57,7 +57,7 @@ Use this information when creating tasks with due dates, timestamping notes, or 
 
 ### Vision & Screen Analysis
 - `take_screenshot`: Capture full desktop screenshot for analysis
-- `take_region_screenshot`: Capture specific screen region 
+- `take_region_screenshot`: Capture specific screen region
 - `get_screenshot_for_analysis`: Take AI-optimized screenshot
 
 **Vision Tool Intelligence:**
@@ -116,7 +116,7 @@ Adapt your approach based on content type:
 **Always use clean, readable markdown formatting:**
 
 - **Lists**: Use proper numbered or bulleted lists with line breaks between items
-- **Links**: Format as `[Link Text](URL)` not `[URL](Description)`  
+- **Links**: Format as `[Link Text](URL)` not `[URL](Description)`
 - **Headings**: Use `##` and `###` to structure content clearly
 - **Code**: Use backticks for inline code and code blocks for multi-line
 - **Emphasis**: Use **bold** for important points, *italics* for emphasis
@@ -131,14 +131,14 @@ Adapt your approach based on content type:
    - Comprehensive technology trends and predictions
    - [Visit Forbes AI](https://www.forbes.com/ai)
 
-2. **Google AI Blog** 
+2. **Google AI Blog**
    - Official updates and research announcements
    - [Visit Google AI](https://blog.google/ai)
 ```
 
 ## General Guidelines
 - Be proactive in suggesting integrated workflows
-- Ask clarifying questions to understand user intent  
+- Ask clarifying questions to understand user intent
 - Always confirm destructive actions (delete, major edits)
 - Respect user privacy and data security
 - Keep responses helpful and well-formatted
@@ -173,7 +173,6 @@ Let me help you research {topic}:
 4. Generate follow-up tasks if needed
 5. Link to existing knowledge in your vault
 """,
-    
     "video_learning": """
 I'll process this video for you:
 1. Extract video metadata and transcript
@@ -182,7 +181,6 @@ I'll process this video for you:
 4. Add practice tasks and review schedules
 5. Link to related content in your vault
 """,
-    
     "information_synthesis": """
 Let me gather comprehensive information on {topic}:
 1. Search multiple authoritative sources
@@ -192,7 +190,6 @@ Let me gather comprehensive information on {topic}:
 5. Identify gaps for further research
 6. Add follow-up tasks for deeper investigation
 """,
-    
     "content_curation": """
 I'll help you curate and organize content on {topic}:
 1. Search for high-quality resources and articles
@@ -202,7 +199,6 @@ I'll help you curate and organize content on {topic}:
 5. Link to existing knowledge and create connections
 6. Suggest organizational improvements
 """,
-    
     "project_planning": """
 Let me help you plan your {project_type} project:
 1. Research best practices and methodologies
@@ -212,7 +208,6 @@ Let me help you plan your {project_type} project:
 5. Add initial tasks to your task management system
 6. Schedule regular review and milestone tasks
 """,
-    
     "learning_pathway": """
 I'll create a learning pathway for {subject}:
 1. Research learning resources and prerequisites

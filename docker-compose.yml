@@ -2,10 +2,19 @@ services:
   searxng:
     container_name: searxng
     image: searxng/searxng:latest
+    user: "977:977"
     ports:
       - "8080:8080"
     volumes:
       - ./searxng:/etc/searxng:rw
     environment:
       - SEARXNG_BASE_URL=http://localhost:8080/
+      - UWSGI_WORKERS=1
+      - UWSGI_THREADS=4
     restart: unless-stopped
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID

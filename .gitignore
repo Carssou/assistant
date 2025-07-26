@@ -165,4 +165,8 @@ searxng/uwsgi.ini
 
 # Screenshots - user privacy protection
 screenshots/
+
+# Claude and tools
+.claude/
+PRPs/
  
