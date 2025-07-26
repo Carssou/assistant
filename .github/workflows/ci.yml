@@ -38,10 +38,12 @@ jobs:
       run: |
         pytest tests/ -v --tb=short
       env:
-        # Test environment variables
-        LLM_PROVIDER: anthropic
+        # Test environment variables - use AWS to match local tests
+        LLM_PROVIDER: aws
         LLM_CHOICE: claude-3-5-sonnet-20241022
-        LLM_API_KEY: test-key
+        AWS_ACCESS_KEY_ID: test-access-key
+        AWS_SECRET_ACCESS_KEY: test-secret-key
+        AWS_REGION: us-east-1
         OBSIDIAN_VAULT_PATH: /tmp/test-vault
         SEARXNG_BASE_URL: http://localhost:8080
         TODOIST_API_TOKEN: test-token
