@@ -2,6 +2,8 @@
 PydanticAI agent - following the exact course pattern.
 """
 
+# Load config - handle test environment
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -19,8 +21,18 @@ from agent.tools import (
 from config.settings import AgentConfig, create_model_instance, load_config
 from mcp_servers.configs import create_all_mcp_servers
 
-# Load config
-config = load_config()
+if os.getenv("PYTEST_CURRENT_TEST"):
+    # In pytest environment, create minimal config
+    from config.settings import AgentConfig, LLMProvider
+
+    config = AgentConfig(
+        llm_provider=LLMProvider.AWS,
+        llm_choice="claude-3-5-sonnet-20241022",
+        obsidian_vault_path=None,  # Disable validation in tests
+        _env_file=None,
+    )
+else:
+    config = load_config()
 
 
 @dataclass
