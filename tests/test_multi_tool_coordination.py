@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import pytest_asyncio
 
-from agent.agent import create_agent
+from agent.agent import agent
 from config.settings import AgentConfig
 
 
@@ -27,7 +27,27 @@ class TestMultiToolCoordination:
         with patch.dict(os.environ, {"LLM_PROVIDER": "aws"}, clear=True):
             config = AgentConfig(_env_file=None)
             config.obsidian_vault_path = None  # Disable vault validation
-            agent, deps = await create_agent(config)
+            # Create dependencies following course pattern
+            import httpx
+
+            from agent.agent import AgentDeps
+            from utils.logger import setup_agent_logging
+
+            http_client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
+            langfuse_client = setup_agent_logging(
+                log_level=config.log_level,
+                debug_mode=config.debug_mode,
+                langfuse_secret_key=config.langfuse_secret_key,
+                langfuse_public_key=config.langfuse_public_key,
+                langfuse_host=config.langfuse_host,
+            )
+
+            deps = AgentDeps(
+                config=config,
+                http_client=http_client,
+                langfuse_client=langfuse_client,
+                vault_path=config.obsidian_vault_path,
+            )
             return agent, deps
 
     @pytest.mark.asyncio
@@ -188,7 +208,27 @@ class TestPerformanceMetrics:
         with patch.dict(os.environ, {"LLM_PROVIDER": "aws"}, clear=True):
             config = AgentConfig(_env_file=None)
             config.obsidian_vault_path = None  # Disable vault validation
-            agent, deps = await create_agent(config)
+            # Create dependencies following course pattern
+            import httpx
+
+            from agent.agent import AgentDeps
+            from utils.logger import setup_agent_logging
+
+            http_client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
+            langfuse_client = setup_agent_logging(
+                log_level=config.log_level,
+                debug_mode=config.debug_mode,
+                langfuse_secret_key=config.langfuse_secret_key,
+                langfuse_public_key=config.langfuse_public_key,
+                langfuse_host=config.langfuse_host,
+            )
+
+            deps = AgentDeps(
+                config=config,
+                http_client=http_client,
+                langfuse_client=langfuse_client,
+                vault_path=config.obsidian_vault_path,
+            )
             return agent, deps
 
     @pytest.mark.asyncio

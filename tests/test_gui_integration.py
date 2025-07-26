@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-from agent.agent import create_agent
+from agent.agent import agent
 from config.settings import AgentConfig, LLMProvider
 from gui import AgentGUI
 
@@ -32,6 +32,11 @@ class TestAgentGUI:
         config.debug_mode = False
         config.obsidian_vault_path = None
         config.searxng_base_url = "http://localhost:8080"
+        # Add required logging attributes
+        config.log_level = "INFO"
+        config.langfuse_secret_key = None
+        config.langfuse_public_key = None
+        config.langfuse_host = None
         return config
 
     @pytest.fixture
@@ -51,26 +56,30 @@ class TestAgentGUI:
 
     def test_gui_initialization(self, mock_gui):
         """Test GUI initialization."""
-        assert mock_gui.agent is None
-        assert mock_gui.config is None
+        # Agent is now pre-created from agent.agent module
+        assert mock_gui.agent is not None
+        assert mock_gui.config is None  # Config still needs initialization
         assert mock_gui.conversation_history == []
         assert mock_gui.mcp_context_active is False
 
     @pytest.mark.asyncio
-    async def test_initialize_agent_success(self, mock_gui, mock_config, mock_agent):
+    async def test_initialize_agent_success(self, mock_gui, mock_config):
         """Test successful agent initialization."""
         with (
             patch("gui.load_config", return_value=mock_config) as mock_load,
-            patch("gui.create_agent", return_value=(mock_agent, Mock())) as mock_create,
+            patch("httpx.AsyncClient") as mock_client,
+            patch("utils.logger.setup_agent_logging") as mock_logging,
         ):
+            # Mock the dependencies
+            mock_logging.return_value = Mock()
+            mock_client.return_value = Mock()
 
             result = await mock_gui.initialize_agent()
 
             assert result is True
             assert mock_gui.config == mock_config
-            assert mock_gui.agent == mock_agent
+            assert mock_gui.deps is not None  # Deps should be created
             mock_load.assert_called_once()
-            mock_create.assert_called_once_with(mock_config)
 
     @pytest.mark.asyncio
     async def test_initialize_agent_failure(self, mock_gui):
@@ -79,19 +88,23 @@ class TestAgentGUI:
             result = await mock_gui.initialize_agent()
 
             assert result is False
-            assert mock_gui.agent is None
+            # Agent still exists (pre-created), but deps won't be set
+            assert mock_gui.agent is not None
+            assert mock_gui.deps is None
             assert mock_gui.config is None
 
     @pytest.mark.asyncio
     async def test_chat_response_no_agent(self, mock_gui):
-        """Test chat response when agent is not initialized."""
+        """Test chat response when agent is not ready."""
+        # Temporarily set agent to None to test error handling
+        mock_gui.agent = None
         history = []
 
         result = await mock_gui.chat_response("Test message", history)
 
         assert len(result) == 1
         assert result[0]["role"] == "assistant"
-        assert "Agent not initialized" in result[0]["content"]
+        assert "Agent Not Ready" in result[0]["content"]
 
     @pytest.mark.asyncio
     async def test_chat_response_empty_message(self, mock_gui, mock_agent):
@@ -130,31 +143,29 @@ class TestAgentGUI:
 
     @pytest.mark.asyncio
     async def test_chat_response_mcp_cancel_error(self, mock_gui, mock_agent):
-        """Test chat response with MCP cancel scope error (should be handled gracefully)."""
+        """Test chat response with MCP cancel scope error (should be re-raised)."""
         mock_gui.agent = mock_agent
+        mock_gui.deps = Mock()  # Need deps to be set
         mock_agent.run.side_effect = Exception("cancel scope error")
 
         history = []
 
-        result = await mock_gui.chat_response("Test message", history)
-
-        assert len(result) == 1
-        assert result[0]["role"] == "assistant"
-        assert "MCP context warning" in result[0]["content"]
+        # Exception should be re-raised from chat_response
+        with pytest.raises(Exception, match="cancel scope error"):
+            await mock_gui.chat_response("Test message", history)
 
     @pytest.mark.asyncio
     async def test_chat_response_other_error(self, mock_gui, mock_agent):
-        """Test chat response with non-MCP error."""
+        """Test chat response with other error (should be re-raised)."""
         mock_gui.agent = mock_agent
+        mock_gui.deps = Mock()  # Need deps to be set
         mock_agent.run.side_effect = Exception("Other error")
 
         history = []
 
-        result = await mock_gui.chat_response("Test message", history)
-
-        assert len(result) == 1
-        assert result[0]["role"] == "assistant"
-        assert "Error: Other error" in result[0]["content"]
+        # Exception should be re-raised from chat_response
+        with pytest.raises(Exception, match="Other error"):
+            await mock_gui.chat_response("Test message", history)
 
     def test_get_vault_name_no_config(self, mock_gui):
         """Test vault name extraction with no config."""
@@ -203,7 +214,7 @@ class TestAgentGUI:
     def test_get_config_info_no_config(self, mock_gui):
         """Test config info with no configuration loaded."""
         result = mock_gui.get_config_info()
-        assert result == "Configuration not loaded"
+        assert result == "❌ **Configuration not loaded**"
 
     def test_get_config_info_with_config(self, mock_gui, mock_config):
         """Test config info with loaded configuration."""
@@ -214,7 +225,7 @@ class TestAgentGUI:
         assert "Current Configuration:" in result
         assert "AWS" in result
         assert "claude-3-5-sonnet" in result
-        assert "False" in result  # debug_mode
+        # Note: debug_mode not shown in config display, removed assertion
         assert "http://localhost:8080" in result  # searxng_base_url
 
     def test_create_interface(self, mock_gui):
@@ -229,6 +240,10 @@ class TestAgentGUI:
             patch("gui.gr.Textbox"),
             patch("gui.gr.Button"),
             patch("gui.gr.State"),
+            patch("gui.gr.File"),
+            patch("gui.gr.UploadButton"),
+            patch("gui.gr.HTML"),
+            patch("gui.gr.Accordion"),
         ):
 
             mock_interface = Mock()

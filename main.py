@@ -10,7 +10,7 @@ import sys
 
 import click
 
-from agent.agent import create_agent
+from agent.agent import AgentDeps, agent
 from config.settings import load_config
 
 # Configure logging
@@ -30,9 +30,29 @@ async def run_interactive_session():
     logger.info("Starting interactive session")
 
     try:
-        # Load configuration and create agent
+        # Load configuration and create dependencies
         config = load_config()
-        agent, deps = await create_agent(config)
+
+        # Create dependencies following course pattern
+        import httpx
+
+        from utils.logger import setup_agent_logging
+
+        http_client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
+        langfuse_client = setup_agent_logging(
+            log_level=config.log_level,
+            debug_mode=config.debug_mode,
+            langfuse_secret_key=config.langfuse_secret_key,
+            langfuse_public_key=config.langfuse_public_key,
+            langfuse_host=config.langfuse_host,
+        )
+
+        deps = AgentDeps(
+            config=config,
+            http_client=http_client,
+            langfuse_client=langfuse_client,
+            vault_path=config.obsidian_vault_path,
+        )
 
         print(f"✅ Agent initialized with {config.llm_provider} provider")
         logger.info(
@@ -85,7 +105,27 @@ async def run_single_query(query: str):
     """Run a single query against the agent."""
     try:
         config = load_config()
-        agent, deps = await create_agent(config)
+
+        # Create dependencies following course pattern
+        import httpx
+
+        from utils.logger import setup_agent_logging
+
+        http_client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
+        langfuse_client = setup_agent_logging(
+            log_level=config.log_level,
+            debug_mode=config.debug_mode,
+            langfuse_secret_key=config.langfuse_secret_key,
+            langfuse_public_key=config.langfuse_public_key,
+            langfuse_host=config.langfuse_host,
+        )
+
+        deps = AgentDeps(
+            config=config,
+            http_client=http_client,
+            langfuse_client=langfuse_client,
+            vault_path=config.obsidian_vault_path,
+        )
 
         print(f"Query: {query}")
         print("=" * 50)
