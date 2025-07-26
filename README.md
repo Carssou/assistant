@@ -157,12 +157,15 @@ The configuration automatically enables JSON API access required for the MCP ser
 
 ## Architecture
 
+### Major Refactoring (July 2025)
+
+This project underwent a comprehensive architectural refactoring to simplify the PydanticAI implementation and align it with framework best practices. The refactoring focused on removing unnecessary complexity and making the codebase more maintainable and learnable.
+
 ```
 project/
-├── agent/              # PydanticAI agent implementation (refactored 2025-07-05)
-│   ├── agent.py       # Main agent with @agent.tool decorators following PydanticAI patterns
-│   ├── tools.py       # Tool logic separated from decorators (BinaryContent, model-specific handling)
-│   ├── dependencies.py # Dependency injection container
+├── agent/              # Simplified PydanticAI agent (refactored 2025-07-24)
+│   ├── agent.py       # Clean agent following PydanticAI patterns - agent created at module level
+│   ├── tools.py       # Tool implementations with specific parameter passing
 │   └── prompts.py     # Dynamic system prompts with coordination logic
 ├── config/            # Configuration management
 ├── mcp_servers/       # MCP server configurations
@@ -172,7 +175,7 @@ project/
 │   ├── logger.py      # Langfuse integration
 │   ├── server_monitor.py     # Health monitoring
 │   └── graceful_degradation.py # Tool failure handling
-├── tests/             # Comprehensive unit and integration tests
+├── tests/             # Simplified test structure matching new architecture
 │   ├── test_agent.py  # Core agent functionality tests
 │   ├── test_gui_integration.py # GUI integration tests
 │   ├── test_real_integration.py # Real .env config tests
@@ -182,9 +185,23 @@ project/
 └── gui.py             # Gradio web interface
 ```
 
+### Architectural Simplifications
+
+**Before:**
+- Complex factory functions for agent creation
+- Separate `agent/dependencies.py` with factory patterns
+- Tools receiving entire dependency objects
+- Enterprise-style complexity patterns
+
+**After (PydanticAI Best Practices):**
+- Simple module-level agent creation: `agent = Agent(...)`
+- Dependencies defined as simple `@dataclass` in `agent.py`
+- Tools receive only specific parameters they need
+- Clean, documentation-aligned patterns
+
 ### Agent Architecture
 
-This is a standard PydanticAI agent with MCP server integration:
+This is a simplified PydanticAI agent following framework best practices:
 
 **Tool Access:**
 

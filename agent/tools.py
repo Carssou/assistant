@@ -13,7 +13,7 @@ from typing import Any
 
 from pydantic_ai import BinaryContent
 
-from agent.dependencies import AgentDependencies
+# AgentDependencies is defined in agent.py - use Any for typing here
 from utils.screen_capture import (
     get_cursor_position,
     get_screen_size,
@@ -60,12 +60,12 @@ def _save_screenshot(data_url: str, prefix: str = "screenshot") -> str:
         return ""
 
 
-async def take_screenshot_tool(deps: AgentDependencies, quality: int = 75) -> BinaryContent:
+async def take_screenshot_tool(config, quality: int = 75) -> BinaryContent:
     """
     Take a screenshot for analysis.
 
     Args:
-        deps: Agent dependencies containing config and other resources
+        config: Agent configuration containing model choice
         quality: Image quality (1-100, default 75)
 
     Returns:
@@ -76,7 +76,7 @@ async def take_screenshot_tool(deps: AgentDependencies, quality: int = 75) -> Bi
     """
     try:
         # Get model-optimized quality
-        model_name = deps.config.llm_choice.lower()
+        model_name = config.llm_choice.lower()
 
         # Adjust quality for small models
         small_model_keywords = ["lite", "micro", "mini"]
@@ -100,13 +100,12 @@ async def take_screenshot_tool(deps: AgentDependencies, quality: int = 75) -> Bi
 
 
 async def take_region_screenshot_tool(
-    deps: AgentDependencies, x: int, y: int, width: int, height: int, quality: int = 85
+    x: int, y: int, width: int, height: int, quality: int = 85
 ) -> BinaryContent:
     """
     Take a screenshot of a specific screen region.
 
     Args:
-        deps: Agent dependencies
         x: Left coordinate of region
         y: Top coordinate of region
         width: Width of region
@@ -126,12 +125,9 @@ async def take_region_screenshot_tool(
         raise RuntimeError(f"Error taking region screenshot: {str(e)}") from e
 
 
-async def get_screen_info_tool(deps: AgentDependencies) -> dict[str, Any]:
+async def get_screen_info_tool() -> dict[str, Any]:
     """
     Get information about the current screen/desktop.
-
-    Args:
-        deps: Agent dependencies
 
     Returns:
         Dictionary with screen dimensions and cursor position

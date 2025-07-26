@@ -9,7 +9,7 @@ import logging
 
 import gradio as gr
 
-from agent.agent import create_agent
+from agent.agent import AgentDeps, agent
 from config.settings import AgentConfig, load_config
 
 
@@ -23,7 +23,7 @@ class AgentGUI:
 
     def __init__(self):
         """Initialize the GUI wrapper."""
-        self.agent = None
+        self.agent = agent  # Use the pre-created agent from course pattern
         self.deps = None
         self.config: AgentConfig | None = None
         self.conversation_history: list[dict[str, str]] = []
@@ -47,22 +47,71 @@ class AgentGUI:
         tool_logger.setLevel(logging.INFO)
         tool_logger.propagate = False  # Don't propagate to root logger
 
+    def process_uploaded_file(self, file_path: str) -> str:
+        """Process uploaded file and provide content to agent."""
+        if not file_path:
+            return ""
+
+        try:
+            from pathlib import Path
+
+            file_obj = Path(file_path)
+            file_name = file_obj.name
+            file_ext = file_obj.suffix.lower()
+
+            # Read file content based on type
+            if file_ext in [".txt", ".md", ".py", ".js", ".json"]:
+                with open(file_path, encoding="utf-8") as f:
+                    content = f.read()
+            elif file_ext == ".pdf":
+                content = f"[PDF file uploaded: {file_name} - PDF text extraction requires additional setup]"
+            elif file_ext == ".docx":
+                content = f"[Word document uploaded: {file_name} - DOCX processing requires additional setup]"
+            else:
+                content = f"[File uploaded: {file_name} - File type: {file_ext}]"
+
+            return f"\n\n**📎 Uploaded File**: {file_name}\n```\n{content}\n```"
+
+        except Exception as e:
+            return f"\n\n❌ **File Error**: Could not read {file_path} - {str(e)}"
+
     async def initialize_agent(self) -> bool:
         """
-        Initialize the agent with current configuration.
+        Initialize the agent dependencies following course pattern.
 
         Returns:
             True if initialization successful, False otherwise
         """
         try:
             self.config = load_config()
-            self.agent, self.deps = await create_agent(self.config)
+
+            # Create dependencies following course pattern
+            import httpx
+
+            from utils.logger import setup_agent_logging
+
+            http_client = httpx.AsyncClient(timeout=httpx.Timeout(30.0))
+            langfuse_client = setup_agent_logging(
+                log_level=self.config.log_level,
+                debug_mode=self.config.debug_mode,
+                langfuse_secret_key=self.config.langfuse_secret_key,
+                langfuse_public_key=self.config.langfuse_public_key,
+                langfuse_host=self.config.langfuse_host,
+            )
+
+            self.deps = AgentDeps(
+                config=self.config,
+                http_client=http_client,
+                langfuse_client=langfuse_client,
+                vault_path=self.config.obsidian_vault_path,
+            )
+
             return True
         except Exception as e:
-            print(f"Failed to initialize agent: {e}")
+            print(f"Failed to initialize agent dependencies: {e}")
             return False
 
-    async def chat_response(self, message: str, history: list) -> list:
+    async def chat_response(self, message: str, history: list) -> tuple[list, str]:
         """
         Generate complete chat response with MCP error handling.
 
@@ -77,7 +126,7 @@ class AgentGUI:
             history.append(
                 {
                     "role": "assistant",
-                    "content": "Error: Agent not initialized. Please check configuration.",
+                    "content": "⚠️ **Agent Not Ready**: The AI agent isn't initialized.\n\n💡 *Try clicking 'Refresh Config' in the sidebar to reload the configuration.*",
                 }
             )
             return history
@@ -100,11 +149,10 @@ class AgentGUI:
 
             chat_history = []
 
-            # CRITICAL: Add system prompt at the start of history if history exists
+            # CRITICAL: Always add system prompt at the start when message_history is provided
             # PydanticAI doesn't auto-include system prompt when message_history is provided
-            if history:
-                system_prompt = get_system_prompt()
-                chat_history.append(ModelRequest(parts=[SystemPromptPart(content=system_prompt)]))
+            system_prompt = get_system_prompt()
+            chat_history.append(ModelRequest(parts=[SystemPromptPart(content=system_prompt)]))
 
             for msg in history:
                 if msg["role"] == "user":
@@ -130,7 +178,20 @@ class AgentGUI:
 
             response = result.output
 
-            # Log completion and any tool usage information
+            # Extract and clean up thinking content to avoid blank lines
+            thinking_content = ""
+            import re
+
+            thinking_match = re.search(r"<thinking>(.*?)</thinking>", response, re.DOTALL)
+            if thinking_match:
+                thinking_content = thinking_match.group(1).strip()
+                # Remove thinking tags from the main response to avoid blank lines
+                response = re.sub(
+                    r"<thinking>.*?</thinking>\s*", "", response, flags=re.DOTALL
+                ).strip()
+
+            # Log completion and track tool usage information
+            tool_usage_text = "🔧 **Last Tools Used**: None (direct response)"
             try:
                 if hasattr(result, "all_messages") and callable(result.all_messages):
                     tool_calls = []
@@ -138,10 +199,12 @@ class AgentGUI:
                         if hasattr(msg, "parts"):
                             for part in msg.parts:
                                 if hasattr(part, "tool_name"):
-                                    tool_calls.append(f"🔧 {part.tool_name}")
+                                    tool_calls.append(part.tool_name)
 
                     if tool_calls:
-                        print(f"✅ Tools used: {', '.join(tool_calls)}")
+                        unique_tools = list(set(tool_calls))  # Remove duplicates
+                        tool_usage_text = f"🔧 **Last Tools Used**: {', '.join(unique_tools)}"
+                        print(f"✅ Tools used: {', '.join(unique_tools)}")
                     else:
                         print("✅ No tools used")
                 else:
@@ -150,22 +213,23 @@ class AgentGUI:
                 # Don't let logging failures break the response
                 print("✅ Response completed")
 
-            history.append({"role": "assistant", "content": response})
+            # Build the final response with thinking and tool info integrated
+            final_response = response
+
+            # Add thinking section if present
+            if thinking_content:
+                final_response = f"*{thinking_content}*\n\n────────\n{response}"
+
+            # Add tool usage info at the end if tools were used
+            if "None (direct response)" not in tool_usage_text:
+                final_response += f"\n\n---\n\n{tool_usage_text}"
+
+            history.append({"role": "assistant", "content": final_response})
             return history
 
         except Exception as e:
-            # Handle MCP cancel scope errors gracefully
-            error_str = str(e).lower()
-            if "cancel scope" in error_str or "different task" in error_str:
-                # Log but don't fail - this is a known MCP threading issue
-                print(f"MCP context warning (continuing normally): {e}")
-                history.append(
-                    {"role": "assistant", "content": "Response completed (MCP context warning)"}
-                )
-            else:
-                # Other errors should be shown to user
-                history.append({"role": "assistant", "content": f"Error: {str(e)}"})
-            return history
+            # Let the agent handle its own errors - just re-raise
+            raise e
 
     def _get_vault_name(self) -> str:
         """Extract vault name from full path."""
@@ -206,23 +270,68 @@ class AgentGUI:
 
         return provider_names.get(provider_str.lower(), provider_str.title())
 
+    def validate_config(self) -> dict[str, bool]:
+        """Validate current configuration and return status for each component."""
+        if not self.config:
+            return {}
+
+        validation = {}
+
+        # Validate LLM Provider
+        validation["llm_provider"] = bool(self.config.llm_provider and self.config.llm_choice)
+
+        # Validate Obsidian
+        obsidian_path = getattr(self.config, "obsidian_vault_path", None)
+        if obsidian_path:
+            from pathlib import Path
+
+            validation["obsidian"] = Path(obsidian_path).exists()
+        else:
+            validation["obsidian"] = False
+
+        # Validate SearXNG
+        searxng_url = getattr(self.config, "searxng_base_url", None)
+        validation["searxng"] = bool(searxng_url and searxng_url.startswith("http"))
+
+        # Validate Todoist
+        todoist_token = getattr(self.config, "todoist_api_token", None)
+        validation["todoist"] = bool(todoist_token)
+
+        # Validate YouTube
+        youtube_key = getattr(self.config, "youtube_api_key", None)
+        validation["youtube"] = bool(youtube_key)
+
+        return validation
+
     def get_config_info(self) -> str:
         """
-        Get current configuration information.
+        Get current configuration information with validation status.
 
         Returns:
-            Formatted configuration string
+            Formatted configuration string with status indicators
         """
         if not self.config:
-            return "Configuration not loaded"
+            return "❌ **Configuration not loaded**"
+
+        validation = self.validate_config()
+
+        # Status indicators
+        llm_status = "✅" if validation.get("llm_provider", False) else "❌"
+        obsidian_status = "✅" if validation.get("obsidian", False) else "⚠️"
+        searxng_status = "✅" if validation.get("searxng", False) else "⚠️"
+        todoist_status = "✅" if validation.get("todoist", False) else "⚠️"
+        youtube_status = "✅" if validation.get("youtube", False) else "⚠️"
 
         return f"""
 **Current Configuration:**
-- LLM Provider: {self._format_provider_name()}
-- Model: {self.config.llm_choice}
-- Debug Mode: {self.config.debug_mode}
-- Obsidian Vault: {self._get_vault_name()}
-- SearXNG URL: {getattr(self.config, 'searxng_base_url', 'Not configured')}
+{llm_status} **LLM Provider**: {self._format_provider_name()}/n
+{llm_status} **Model**: {self.config.llm_choice}
+
+**MCP Servers:**
+{obsidian_status} **Obsidian Vault**: {self._get_vault_name()}/n
+{searxng_status} **SearXNG URL**: {getattr(self.config, 'searxng_base_url', 'Not configured')}/n
+{todoist_status} **Todoist**: {'Configured' if validation.get('todoist', False) else 'Not configured'}/n
+{youtube_status} **YouTube**: {'Configured' if validation.get('youtube', False) else 'Not configured'}
 """
 
     def create_interface(self) -> gr.Blocks:
@@ -247,19 +356,94 @@ class AgentGUI:
                 margin: 5px 0;
                 border-radius: 10px;
             }
+            /* Make attachment button small */
+            .attach-button {
+                min-width: 40px !important;
+                max-width: 40px !important;
+                width: 40px !important;
+                flex: none !important;
+            }
+            .attach-button button {
+                min-width: 40px !important;
+                max-width: 40px !important;
+                width: 40px !important;
+                padding: 4px !important;
+                font-size: 16px !important;
+            }
+            /* Enhanced UI styling */
+            .main-container {
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                border-radius: 15px;
+                padding: 20px;
+                margin: 10px;
+                box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            }
+            .chat-container {
+                background: rgba(255, 255, 255, 0.9);
+                border-radius: 15px;
+                padding: 15px;
+                box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.2);
+                backdrop-filter: blur(4px);
+            }
+            .config-panel {
+                background: rgba(255, 255, 255, 0.95);
+                border-radius: 15px;
+                padding: 20px;
+                box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.2);
+                backdrop-filter: blur(4px);
+            }
+            /* Loading indicator */
+            .loading-indicator {
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid #3498db;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            /* Status indicators with better styling */
+            .status-good { color: #27ae60; font-weight: bold; }
+            .status-warning { color: #f39c12; font-weight: bold; }
+            .status-error { color: #e74c3c; font-weight: bold; }
+            /* Button enhancements */
+            .gradio-button {
+                transition: all 0.3s ease;
+                border-radius: 8px;
+            }
+            .gradio-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            }
+            /* Input field enhancements */
+            .gradio-textbox {
+                border-radius: 10px;
+                border: 2px solid #e0e0e0;
+                transition: all 0.3s ease;
+            }
+            .gradio-textbox:focus {
+                border-color: #3498db;
+                box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+            }
             """,
         ) as interface:
 
-            gr.Markdown(
+            # Enhanced header with better styling
+            gr.HTML(
                 """
-                # 🤖 Productivity Agent
-
-                Your AI assistant with access to notes, web search, tasks, and video analysis.
+                <div style="text-align: center; padding: 20px; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); border-radius: 15px; margin-bottom: 20px; color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                    <h1 style="margin: 0; font-size: 2.5em; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🤖 Productivity Agent</h1>
+                    <p style="margin: 10px 0 0 0; font-size: 1.2em; opacity: 0.9;">Your intelligent AI assistant with access to notes, web search, tasks, and video analysis</p>
+                </div>
                 """
             )
 
-            with gr.Row():
-                with gr.Column(scale=8):
+            with gr.Row(elem_classes="main-container"):
+                with gr.Column(scale=8, elem_classes="chat-container"):
                     # Main chat interface
                     chatbot = gr.Chatbot(
                         label="Chat with Agent",
@@ -273,62 +457,152 @@ class AgentGUI:
                     )
 
                     with gr.Row():
+                        # Hidden file upload that opens explorer directly
+                        file_upload = gr.File(
+                            file_types=[".txt", ".md", ".pdf", ".docx", ".py", ".js", ".json"],
+                            file_count="single",
+                            visible=False,
+                        )
+
                         msg = gr.Textbox(
                             label="Message",
                             placeholder="Ask me to search, take notes, manage tasks, or analyze videos...",
                             container=False,
                             scale=4,
                         )
+                        # Small attachment button
+                        attach_btn = gr.UploadButton(
+                            "📎",
+                            file_types=[".txt", ".md", ".pdf", ".docx", ".py", ".js", ".json"],
+                            file_count="single",
+                            size="sm",
+                            elem_classes="attach-button",
+                        )
                         submit = gr.Button("Send", variant="primary", scale=1)
                         clear = gr.Button("Clear", variant="secondary", scale=1)
 
-                with gr.Column(scale=2):
-                    # Configuration panel
-                    gr.Markdown("### Configuration")
+                    # Small file indicator (shows when file is attached)
+                    file_display = gr.Markdown("", visible=False, container=False)
 
-                    config_display = gr.Markdown(self.get_config_info(), label="Current Config")
+                    # Loading indicator and progress feedback
+                    loading_indicator = gr.HTML("", visible=False)
+                    progress_text = gr.Markdown("", visible=False)
 
-                    refresh_config = gr.Button("Refresh Config", variant="secondary")
-
-                    # Status indicators
-                    gr.Markdown("### Status")
-
-                    agent_status = gr.Markdown(
-                        "🔴 **Agent**: Not initialized", label="Agent Status"
+                with gr.Column(scale=2, elem_classes="config-panel"):
+                    # Clean configuration header
+                    gr.HTML(
+                        "<h3 style='text-align: center; margin-bottom: 15px; color: #333;'>⚙️ Configuration</h3>"
                     )
 
-                    # Help section
-                    gr.Markdown("### Usage Examples")
-                    gr.Markdown(
-                        """
-                    **Research & Notes:**
-                    - "Research latest AI developments and create notes"
-                    - "Search for productivity tools and organize findings"
+                    config_display = gr.Markdown(self.get_config_info(), container=False)
 
-                    **Task Management:**
-                    - "Show my current Todoist tasks"
-                    - "Add task to review documentation by Friday"
+                    with gr.Row():
+                        refresh_config = gr.Button("Refresh", variant="secondary", size="sm")
+                        validate_config = gr.Button("Validate", variant="primary", size="sm")
 
-                    **Video Learning:**
-                    - "Analyze this YouTube video: [URL]"
-                    - "Create study notes from this tutorial"
+                    validation_results = gr.Markdown("", visible=False, container=False)
 
-                    **Web Search:**
-                    - "Find recent news about AI developments"
-                    - "Search for Python best practices"
-                    """
+                    # Clean status section
+                    gr.HTML(
+                        "<h3 style='text-align: center; margin: 20px 0 10px 0; color: #333;'>📊 Status</h3>"
                     )
+                    agent_status = gr.Markdown("🔴 **Agent**: Not initialized", container=False)
+
+                    # Enhanced help with tabs or expandable sections
+                    with gr.Accordion("📚 Getting Started Guide", open=False):
+                        gr.Markdown(
+                            """
+                            ## 🚀 Quick Start
+
+                            1. **Check Configuration**: Ensure your `.env` file is properly configured
+                            2. **Validate Setup**: Click "Validate" to verify all services
+
+                            """
+                        )
+
+                    with gr.Accordion("🔧 Troubleshooting", open=False):
+                        gr.Markdown(
+                            """
+                            ## Common Issues & Solutions
+
+                            ### ❌ Agent Not Responding
+                            1. Check if agent status shows "Ready"
+                            2. Click "Refresh Config" to reinitialize
+                            3. Verify your `.env` file configuration
+
+                            ### ⚠️ MCP Servers Not Working
+                            1. Run "Validate Config" to check server status
+                            2. Ensure required API keys are configured
+                            3. Check that file paths exist (Obsidian vault)
+
+                            ### 🐌 Slow Responses
+                            - Large requests may take 15-30 seconds
+                            - Vision analysis is processing intensive
+                            - Try breaking complex requests into smaller parts
+
+                            ### 📁 File Upload Issues
+                            - Supported formats: .txt, .md, .pdf, .docx, .py, .js, .json
+                            - Files are processed as context for your next message
+                            - Large files may take longer to process
+
+                            ## 🆘 Still Need Help?
+                            - Check the validation report for specific issues
+                            - Ensure all environment variables are correctly set
+                            - Try restarting the interface if issues persist
+                            """
+                        )
+
+                    with gr.Accordion("⚙️ Advanced Configuration", open=False):
+                        gr.Markdown(
+                            """
+                            ## Environment Variables
+
+                            ### Required for Core Functionality:
+                            ```env
+                            LLM_PROVIDER=aws|anthropic|openai
+                            LLM_CHOICE=claude-3-5-sonnet-20241022|gpt-4o|amazon.nova-lite-v1:0
+                            ```
+
+                            ### Optional MCP Servers:
+                            ```env
+                            OBSIDIAN_VAULT_PATH=/path/to/your/vault
+                            SEARXNG_BASE_URL=http://localhost:8080
+                            TODOIST_API_TOKEN=your_todoist_api_token
+                            YOUTUBE_API_KEY=your_youtube_api_key
+                            ```
+
+                            ### AWS Configuration (if using AWS Bedrock):
+                            ```env
+                            AWS_REGION=us-east-1
+                            AWS_ACCESS_KEY_ID=your_access_key
+                            AWS_SECRET_ACCESS_KEY=your_secret_key
+                            ```
+
+                            ## MCP Server Status Meanings:
+                            - ✅ **Working**: Server is configured and accessible
+                            - ⚠️ **Optional**: Server is not configured but not required
+                            - ❌ **Issue**: Server configuration has problems
+                            """
+                        )
 
             # State for message passing
             msg_state = gr.State("")
 
             # Event handlers
-            def add_user_message(message, history):
-                """Add user message to history."""
-                if not message.strip():
-                    return "", history, ""
-                history = history + [{"role": "user", "content": message}]
-                return "", history, message  # Return message as third output
+            def add_user_message(message, history, uploaded_file=None):
+                """Add user message to history, processing uploaded files if present."""
+                final_message = message
+
+                # Process uploaded file if present
+                if uploaded_file is not None:
+                    file_content = self.process_uploaded_file(uploaded_file)
+                    final_message = f"{message}{file_content}"
+
+                if not final_message.strip():
+                    return "", history, "", None  # Return None to clear file upload
+
+                history = history + [{"role": "user", "content": final_message}]
+                return "", history, final_message, None  # Return message and clear file upload
 
             def get_response(message, history):
                 """Get complete agent response."""
@@ -352,48 +626,165 @@ class AgentGUI:
                     logging.info("GUI chat_response completed")
                     return updated_history
                 except Exception as e:
-                    # Log unexpected errors
+                    # Enhanced error handling for GUI events
+                    error_str = str(e).lower()
                     print(f"[GUI EVENT] Response error: {e}")
                     logging.error(f"GUI response error: {e}")
                     import traceback
 
                     traceback.print_exc()
-                    history.append({"role": "assistant", "content": f"Error: {str(e)}"})
+
+                    # Categorized error display
+                    if "config" in error_str or "initialization" in error_str:
+                        error_msg = f"⚙️ **Configuration Error**: {str(e)}\n\n💡 *Check your configuration and try refreshing.*"
+                    elif "timeout" in error_str:
+                        error_msg = f"⏰ **Processing Timeout**: {str(e)}\n\n💡 *The request took too long. Try a simpler query.*"
+                    else:
+                        error_msg = f"❌ **Unexpected Error**: {str(e)}\n\n💡 *This may be a temporary issue. Try refreshing the configuration.*"
+
+                    history.append({"role": "assistant", "content": error_msg})
                     return history
                 finally:
                     loop.close()
 
+            def show_loading():
+                """Show loading indicator."""
+                loading_html = """
+                <div style="text-align: center; padding: 10px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #3498db;">
+                    <div class="loading-indicator"></div>
+                    <span style="margin-left: 10px; color: #3498db; font-weight: 500;">AI is thinking...</span>
+                </div>
+                """
+                progress_msg = "🤖 **Processing your request...** \n\n⏱️ This may take a few moments depending on the complexity of your query."
+                return gr.HTML(value=loading_html, visible=True), gr.Markdown(
+                    value=progress_msg, visible=True
+                )
+
             def clear_chat():
                 """Clear chat history."""
-                self.conversation_history = []
-                return [], ""
+                return (
+                    [],
+                    "",
+                    "",
+                    gr.Markdown(visible=False),
+                    gr.HTML(visible=False),
+                    gr.Markdown(visible=False),
+                )  # Clear chat, message, file display, loading indicators
 
             async def refresh_config_info():
-                """Refresh configuration display."""
+                """Refresh configuration display and reinitialize agent."""
                 await self.initialize_agent()
                 status = (
                     "🟢 **Agent**: Ready" if self.agent else "🔴 **Agent**: Failed to initialize"
                 )
                 return self.get_config_info(), status
 
+            def validate_config_handler():
+                """Handle configuration validation."""
+                if not self.config:
+                    return "❌ **No configuration loaded**\n\nPlease check your .env file and refresh the configuration."
+
+                validation = self.validate_config()
+                issues = []
+                warnings = []
+
+                # Check for critical issues
+                if not validation.get("llm_provider", False):
+                    issues.append(
+                        "❌ **LLM Provider**: Missing or invalid provider/model configuration"
+                    )
+
+                # Check for optional but recommended settings
+                if not validation.get("obsidian", False):
+                    warnings.append("⚠️ **Obsidian**: Vault path not configured or inaccessible")
+                if not validation.get("searxng", False):
+                    warnings.append("⚠️ **SearXNG**: URL not configured")
+                if not validation.get("todoist", False):
+                    warnings.append("⚠️ **Todoist**: API token not configured")
+                if not validation.get("youtube", False):
+                    warnings.append("⚠️ **YouTube**: API key not configured")
+
+                # Generate validation report
+                report_lines = ["## Configuration Validation Report\n"]
+
+                if not issues and not warnings:
+                    report_lines.append("✅ **All systems operational!**\n")
+
+                if issues:
+                    report_lines.append("### ❌ Critical Issues")
+                    report_lines.extend(issues)
+                    report_lines.append("")
+                    report_lines.append("*Fix these issues to ensure the agent works properly.*\n")
+
+                if warnings:
+                    report_lines.append("### ⚠️ Optional Components")
+                    report_lines.extend(warnings)
+                    report_lines.append("")
+                    report_lines.append(
+                        "*These are optional but enable additional functionality.*\n"
+                    )
+
+                report_lines.append("### 💡 Recommendations")
+                if issues:
+                    report_lines.append("- Check your .env file for missing or incorrect values")
+                    report_lines.append("- Verify API keys and file paths are correct")
+                    report_lines.append("- Click 'Refresh Config' after making changes")
+                else:
+                    report_lines.append("- Your configuration looks good!")
+                    if warnings:
+                        report_lines.append(
+                            "- Consider configuring optional components for enhanced functionality"
+                        )
+
+                return "\n".join(report_lines)
+
+            def handle_file_attached(file):
+                """Handle when a file is attached via the upload button."""
+                if file is not None:
+                    from pathlib import Path
+
+                    file_name = Path(file.name).name if hasattr(file, "name") else str(file)
+                    return f"📎 **File attached**: {file_name}", gr.Markdown(visible=True), file
+                else:
+                    return "", gr.Markdown(visible=False), None
+
             # Event connections
             submit.click(
                 add_user_message,
-                inputs=[msg, chatbot],
-                outputs=[msg, chatbot, msg_state],
+                inputs=[msg, chatbot, file_upload],
+                outputs=[msg, chatbot, msg_state, file_upload],
                 queue=False,
             ).then(get_response, inputs=[msg_state, chatbot], outputs=chatbot, queue=True)
 
             msg.submit(
                 add_user_message,
-                inputs=[msg, chatbot],
-                outputs=[msg, chatbot, msg_state],
+                inputs=[msg, chatbot, file_upload],
+                outputs=[msg, chatbot, msg_state, file_upload],
                 queue=False,
             ).then(get_response, inputs=[msg_state, chatbot], outputs=chatbot, queue=True)
 
-            clear.click(clear_chat, outputs=[chatbot, msg])
+            clear.click(
+                clear_chat,
+                outputs=[
+                    chatbot,
+                    msg,
+                    file_display,
+                    file_display,
+                    loading_indicator,
+                    progress_text,
+                ],
+            )
 
             refresh_config.click(refresh_config_info, outputs=[config_display, agent_status])
+
+            validate_config.click(validate_config_handler, outputs=[validation_results])
+
+            # File attachment events
+            attach_btn.upload(
+                handle_file_attached,
+                inputs=[attach_btn],
+                outputs=[file_display, file_display, file_upload],
+            )
 
             # Initialize on startup
             interface.load(refresh_config_info, outputs=[config_display, agent_status])
