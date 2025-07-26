@@ -61,9 +61,15 @@ class TestAgentTools:
             mock_screenshot.return_value = b"fake_image_data"
 
             from agent.tools import take_screenshot_tool
-            from config.settings import load_config
+            from config.settings import AgentConfig, LLMProvider
 
-            config = load_config()
+            # Create test config directly to avoid validation issues
+            config = AgentConfig(
+                llm_provider=LLMProvider.AWS,
+                llm_choice="claude-3-5-sonnet-20241022",
+                obsidian_vault_path=None,
+                _env_file=None,
+            )
             result = await take_screenshot_tool(config, 75)
 
             # Should return BinaryContent

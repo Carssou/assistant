@@ -30,19 +30,8 @@ class AgentDeps:
     vault_path: Path | None
 
 
-# Load config lazily
-try:
-    config = load_config()
-except Exception:
-    # If config loading fails (like in tests), create minimal config
-    from config.settings import LLMProvider
-
-    config = AgentConfig(
-        llm_provider=LLMProvider.AWS,
-        llm_choice="claude-3-5-sonnet-20241022",
-        obsidian_vault_path=None,
-        _env_file=None,
-    )
+# Load config
+config = load_config()
 
 # Create agent - exactly like the course
 agent = Agent(

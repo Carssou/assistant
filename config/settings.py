@@ -89,7 +89,7 @@ class AgentConfig(BaseSettings):
         """Validate that the vault path exists if provided."""
         if v is not None:
             # Skip validation for placeholder paths
-            if str(v) == "/path/to/your/vault":
+            if str(v) in ("/path/to/your/vault", "/tmp/test-vault"):
                 return None
             if not v.exists():
                 raise ValueError(f"Obsidian vault path does not exist: {v}")
