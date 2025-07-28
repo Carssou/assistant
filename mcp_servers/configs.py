@@ -2,37 +2,23 @@
 MCP server configurations for the PydanticAI agent.
 
 This module provides factory functions for creating MCP server instances
-for different productivity tools.
+for different productivity tools using SSE transport for persistent connections.
 """
 
-from pydantic_ai.mcp import MCPServerStdio
+from pydantic_ai.mcp import MCPServerSSE, MCPServerStdio
 
 from config.settings import AgentConfig
 
 
-def create_obsidian_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
+def create_obsidian_mcp_server(config: AgentConfig) -> None:
     """
-    Create Obsidian MCP server instance.
+    Obsidian MCP server disabled - using native tools instead.
 
-    Args:
-        config: Agent configuration containing vault path
-
-    Returns:
-        MCPServerStdio instance or None if vault path not configured
+    The Obsidian functionality is now implemented as native PydanticAI tools
+    for better performance (sub-1-second vs 20+ second response times).
     """
-    if not config.obsidian_vault_path:
-        return None
-
-    vault_path = config.obsidian_vault_path
-
-    # Skip validation for placeholder paths
-    if str(vault_path) == "/path/to/your/vault":
-        return None
-
-    if not vault_path.exists():
-        raise ValueError(f"Obsidian vault path does not exist: {vault_path}")
-
-    return MCPServerStdio(command="npx", args=["-y", "obsidian-mcp-pydanticai", str(vault_path)])
+    # Temporarily disabled - native tools are now used instead
+    return None
 
 
 def create_searxng_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
@@ -95,7 +81,7 @@ def create_youtube_mcp_server(config: AgentConfig) -> MCPServerStdio | None:
     return MCPServerStdio(command="npx", args=["-y", "youtube-video-summarizer-mcp-pydanticai"])
 
 
-def create_all_mcp_servers(config: AgentConfig) -> list[MCPServerStdio]:
+def create_all_mcp_servers(config: AgentConfig) -> list[MCPServerStdio | MCPServerSSE]:
     """
     Create all configured MCP servers.
 

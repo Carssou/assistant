@@ -92,7 +92,7 @@ async def run_interactive_session():
                 print("Please try again.\n")
 
         # Clean up
-        await deps.close()
+        await deps.http_client.aclose()
 
     except Exception as e:
         print(f"Failed to initialize agent: {e}")
@@ -140,7 +140,7 @@ async def run_single_query(query: str):
         print(f"Response: {result.output}")
         logger.info("Query completed successfully")
 
-        await deps.close()
+        await deps.http_client.aclose()
 
     except Exception as e:
         print(f"Error: {e}")
