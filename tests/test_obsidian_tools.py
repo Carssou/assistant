@@ -86,7 +86,7 @@ This note has #hashtags and frontmatter tags.
     async def test_create_obsidian_note(self, mock_deps):
         """Test creating a new note."""
         result = await create_obsidian_note(
-            mock_deps, "test_vault", "new_note", "# New Note\n\nThis is new content."
+            mock_deps, "new_note", "# New Note\n\nThis is new content."
         )
 
         assert "Note created successfully" in result
@@ -103,7 +103,6 @@ This note has #hashtags and frontmatter tags.
         """Test creating a note in a subfolder."""
         result = await create_obsidian_note(
             mock_deps,
-            "test_vault",
             "folder_note",
             "# Folder Note\n\nContent in folder.",
             folder="new_folder",
@@ -120,12 +119,12 @@ This note has #hashtags and frontmatter tags.
     async def test_create_duplicate_note_fails(self, mock_deps):
         """Test that creating a duplicate note fails."""
         with pytest.raises(ValueError, match="Note already exists"):
-            await create_obsidian_note(mock_deps, "test_vault", "test_note", "Duplicate content")
+            await create_obsidian_note(mock_deps, "test_note", "Duplicate content")
 
     @pytest.mark.asyncio
     async def test_read_obsidian_note(self, mock_deps):
         """Test reading an existing note."""
-        result = await read_obsidian_note(mock_deps, "test_vault", "test_note")
+        result = await read_obsidian_note(mock_deps, "test_note")
 
         assert "Test Note" in result
         assert "This is a test note." in result
@@ -135,14 +134,13 @@ This note has #hashtags and frontmatter tags.
     async def test_read_nonexistent_note_fails(self, mock_deps):
         """Test that reading a nonexistent note fails."""
         with pytest.raises(ValueError, match="Note not found"):
-            await read_obsidian_note(mock_deps, "test_vault", "nonexistent")
+            await read_obsidian_note(mock_deps, "nonexistent")
 
     @pytest.mark.asyncio
     async def test_edit_obsidian_note_replace(self, mock_deps):
         """Test editing a note with replace operation."""
         result = await edit_obsidian_note(
             mock_deps,
-            "test_vault",
             "test_note",
             "# Updated Note\n\nThis is updated content.",
             operation="replace",
@@ -166,7 +164,7 @@ This note has #hashtags and frontmatter tags.
         note_file.write_text(original_content)
 
         result = await edit_obsidian_note(
-            mock_deps, "test_vault", "append_test", "\n\nAppended content.", operation="append"
+            mock_deps, "append_test", "\n\nAppended content.", operation="append"
         )
 
         assert "Note edited successfully (append)" in result
@@ -184,7 +182,7 @@ This note has #hashtags and frontmatter tags.
         delete_file = vault_path / "to_delete.md"
         delete_file.write_text("# To Delete\n\nThis will be deleted.")
 
-        result = await delete_obsidian_note(mock_deps, "test_vault", "to_delete")
+        result = await delete_obsidian_note(mock_deps, "to_delete")
 
         assert "Note deleted successfully" in result
         assert not delete_file.exists()
@@ -201,9 +199,7 @@ This note has #hashtags and frontmatter tags.
     @pytest.mark.asyncio
     async def test_search_obsidian_vault_content(self, mock_deps):
         """Test content search functionality."""
-        result = await search_obsidian_vault(
-            mock_deps, "test_vault", "test note", search_type="content"
-        )
+        result = await search_obsidian_vault(mock_deps, "test note", search_type="content")
 
         assert "Search Results" in result
         assert "test_note.md" in result or "tagged_note.md" in result
@@ -211,9 +207,7 @@ This note has #hashtags and frontmatter tags.
     @pytest.mark.asyncio
     async def test_search_obsidian_vault_filename(self, mock_deps):
         """Test filename search functionality."""
-        result = await search_obsidian_vault(
-            mock_deps, "test_vault", "tagged", search_type="filename"
-        )
+        result = await search_obsidian_vault(mock_deps, "tagged", search_type="filename")
 
         assert "Search Results" in result
         assert "tagged_note.md" in result
@@ -221,7 +215,7 @@ This note has #hashtags and frontmatter tags.
     @pytest.mark.asyncio
     async def test_search_obsidian_vault_tags(self, mock_deps):
         """Test tag search functionality."""
-        result = await search_obsidian_vault(mock_deps, "test_vault", "ai", search_type="tag")
+        result = await search_obsidian_vault(mock_deps, "ai", search_type="tag")
 
         assert "Search Results" in result
         assert "tagged_note.md" in result
@@ -229,7 +223,7 @@ This note has #hashtags and frontmatter tags.
     @pytest.mark.asyncio
     async def test_get_obsidian_tags_list(self, mock_deps):
         """Test getting tags list."""
-        result = await get_obsidian_tags_list(mock_deps, "test_vault")
+        result = await get_obsidian_tags_list(mock_deps)
 
         assert "All Tags in Vault" in result
         assert "#ai" in result
@@ -239,9 +233,7 @@ This note has #hashtags and frontmatter tags.
     @pytest.mark.asyncio
     async def test_add_obsidian_tags(self, mock_deps):
         """Test adding tags to a note."""
-        result = await add_obsidian_tags(
-            mock_deps, "test_vault", "test_note", ["python", "tutorial"]
-        )
+        result = await add_obsidian_tags(mock_deps, "test_note", ["python", "tutorial"])
 
         assert "Tags added" in result
         assert "#python" in result
@@ -257,7 +249,7 @@ This note has #hashtags and frontmatter tags.
     @pytest.mark.asyncio
     async def test_remove_obsidian_tags(self, mock_deps):
         """Test removing tags from a note."""
-        result = await remove_obsidian_tags(mock_deps, "test_vault", "tagged_note", ["ai"])
+        result = await remove_obsidian_tags(mock_deps, "tagged_note", ["ai"])
 
         assert "Tags removed" in result
         assert "#ai" in result
@@ -272,7 +264,7 @@ This note has #hashtags and frontmatter tags.
     @pytest.mark.asyncio
     async def test_rename_obsidian_tag(self, mock_deps):
         """Test renaming a tag across the vault."""
-        result = await rename_obsidian_tag(mock_deps, "test_vault", "testing", "qa")
+        result = await rename_obsidian_tag(mock_deps, "testing", "qa")
 
         assert "Tag renamed" in result
         assert "testing" in result
@@ -393,7 +385,7 @@ class TestObsidianSecurity:
         """Test filename validation prevents path traversal."""
         with pytest.raises(ValueError, match="cannot contain path separators"):
             await create_obsidian_note(
-                mock_deps_security, "vault", "../../../etc/passwd", "malicious content"
+                mock_deps_security, "../../../etc/passwd", "malicious content"
             )
 
 
@@ -433,9 +425,7 @@ Contains various keywords like performance, testing, benchmark.
 
         start_time = time.time()
 
-        result = await search_obsidian_vault(
-            mock_deps, "vault", "performance", search_type="content"
-        )
+        result = await search_obsidian_vault(mock_deps, "performance", search_type="content")
 
         end_time = time.time()
         search_time = end_time - start_time
@@ -471,7 +461,6 @@ Contains various keywords like performance, testing, benchmark.
 
         result = await create_obsidian_note(
             mock_deps,
-            "vault",
             "unicode_test",
             "# Unicode Test 🚀\n\nContent with émojis and spëcial characters: 测试",
         )
@@ -479,7 +468,7 @@ Contains various keywords like performance, testing, benchmark.
         assert "Note created successfully" in result
 
         # Verify unicode content is preserved
-        read_result = await read_obsidian_note(mock_deps, "vault", "unicode_test")
+        read_result = await read_obsidian_note(mock_deps, "unicode_test")
         assert "🚀" in read_result
         assert "émojis" in read_result
         assert "测试" in read_result
