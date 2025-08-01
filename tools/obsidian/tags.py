@@ -17,12 +17,11 @@ from .utils import (
 )
 
 
-async def add_obsidian_tags(deps, filename: str, tags: list[str], folder: str | None = None) -> str:
+async def add_obsidian_tags(filename: str, tags: list[str], folder: str | None = None) -> str:
     """
     Add tags to an existing note.
 
     Args:
-        deps: Agent dependencies
         filename: Note filename
         tags: List of tags to add
         folder: Optional subfolder path
@@ -35,7 +34,7 @@ async def add_obsidian_tags(deps, filename: str, tags: list[str], folder: str | 
     """
     try:
         # Get vault path
-        vault_path = get_vault_path(deps)
+        vault_path = get_vault_path()
 
         # Validate filename
         if "/" in filename or "\\" in filename:
@@ -110,14 +109,11 @@ async def add_obsidian_tags(deps, filename: str, tags: list[str], folder: str | 
         raise ValueError(f"Failed to add tags: {e}") from e
 
 
-async def remove_obsidian_tags(
-    deps, filename: str, tags: list[str], folder: str | None = None
-) -> str:
+async def remove_obsidian_tags(filename: str, tags: list[str], folder: str | None = None) -> str:
     """
     Remove tags from an existing note.
 
     Args:
-        deps: Agent dependencies
         filename: Note filename
         tags: List of tags to remove
         folder: Optional subfolder path
@@ -130,7 +126,7 @@ async def remove_obsidian_tags(
     """
     try:
         # Get vault path
-        vault_path = get_vault_path(deps)
+        vault_path = get_vault_path()
 
         # Validate filename
         if "/" in filename or "\\" in filename:
@@ -208,12 +204,11 @@ async def remove_obsidian_tags(
         raise ValueError(f"Failed to remove tags: {e}") from e
 
 
-async def rename_obsidian_tag(deps, old_tag: str, new_tag: str) -> str:
+async def rename_obsidian_tag(old_tag: str, new_tag: str) -> str:
     """
     Rename a tag across the entire vault.
 
     Args:
-        deps: Agent dependencies
         old_tag: Current tag name
         new_tag: New tag name
 
@@ -225,7 +220,7 @@ async def rename_obsidian_tag(deps, old_tag: str, new_tag: str) -> str:
     """
     try:
         # Get vault path
-        vault_path = get_vault_path(deps)
+        vault_path = get_vault_path()
 
         # Normalize tags
         old_normalized = normalize_tag(old_tag)

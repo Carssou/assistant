@@ -3,7 +3,6 @@ Core Obsidian file operations.
 """
 
 from datetime import datetime
-from pathlib import Path
 
 from .utils import (
     ensure_directory,
@@ -15,12 +14,11 @@ from .utils import (
 )
 
 
-async def create_obsidian_note(deps, filename: str, content: str, folder: str | None = None) -> str:
+async def create_obsidian_note(filename: str, content: str, folder: str | None = None) -> str:
     """
     Create a new note in the specified vault.
 
     Args:
-        deps: Agent dependencies
         vault: Vault name (currently unused, uses default vault)
         filename: Note filename (without path separators)
         content: Note content in markdown
@@ -34,7 +32,7 @@ async def create_obsidian_note(deps, filename: str, content: str, folder: str | 
     """
     try:
         # Get vault path
-        vault_path = get_vault_path(deps)
+        vault_path = get_vault_path()
 
         # Validate filename
         if "/" in filename or "\\" in filename:
@@ -76,12 +74,11 @@ async def create_obsidian_note(deps, filename: str, content: str, folder: str | 
         raise ValueError(f"Failed to create note: {e}") from e
 
 
-async def read_obsidian_note(deps, filename: str, folder: str | None = None) -> str:
+async def read_obsidian_note(filename: str, folder: str | None = None) -> str:
     """
     Read the content of an existing note.
 
     Args:
-        deps: Agent dependencies
         vault: Vault name
         filename: Note filename
         folder: Optional subfolder path
@@ -94,7 +91,7 @@ async def read_obsidian_note(deps, filename: str, folder: str | None = None) -> 
     """
     try:
         # Get vault path
-        vault_path = get_vault_path(deps)
+        vault_path = get_vault_path()
 
         # Validate filename
         if "/" in filename or "\\" in filename:
@@ -140,7 +137,6 @@ async def read_obsidian_note(deps, filename: str, folder: str | None = None) -> 
 
 
 async def edit_obsidian_note(
-    deps,
     filename: str,
     content: str,
     folder: str | None = None,
@@ -150,7 +146,6 @@ async def edit_obsidian_note(
     Edit an existing note.
 
     Args:
-        deps: Agent dependencies
         vault: Vault name
         filename: Note filename
         content: New content
@@ -165,7 +160,7 @@ async def edit_obsidian_note(
     """
     try:
         # Get vault path
-        vault_path = get_vault_path(deps)
+        vault_path = get_vault_path()
 
         # Validate filename
         if "/" in filename or "\\" in filename:
@@ -238,12 +233,11 @@ async def edit_obsidian_note(
         raise ValueError(f"Failed to edit note: {e}") from e
 
 
-async def delete_obsidian_note(deps, filename: str, folder: str | None = None) -> str:
+async def delete_obsidian_note(filename: str, folder: str | None = None) -> str:
     """
     Delete an existing note.
 
     Args:
-        deps: Agent dependencies
         vault: Vault name
         filename: Note filename
         folder: Optional subfolder path
@@ -256,7 +250,7 @@ async def delete_obsidian_note(deps, filename: str, folder: str | None = None) -
     """
     try:
         # Get vault path
-        vault_path = get_vault_path(deps)
+        vault_path = get_vault_path()
 
         # Validate filename
         if "/" in filename or "\\" in filename:
@@ -298,12 +292,11 @@ async def delete_obsidian_note(deps, filename: str, folder: str | None = None) -
         raise ValueError(f"Failed to delete note: {e}") from e
 
 
-async def list_available_obsidian_vaults(deps) -> str:
+async def list_available_obsidian_vaults() -> str:
     """
     List available Obsidian vaults.
 
     Args:
-        deps: Agent dependencies
 
     Returns:
         List of available vaults
@@ -311,10 +304,9 @@ async def list_available_obsidian_vaults(deps) -> str:
     try:
         # For now, return the single configured vault
         # TODO: Support multiple vaults in config
-        if not deps.config.obsidian_vault_path:
+        vault_path = get_vault_path()
+        if not vault_path:
             return "❌ No Obsidian vault configured"
-
-        vault_path = Path(deps.config.obsidian_vault_path)
         vault_name = vault_path.name
 
         # Check vault status

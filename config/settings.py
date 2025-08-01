@@ -21,6 +21,7 @@ class LLMProvider(str, Enum):
     AZURE = "azure"
     OLLAMA = "ollama"
     OPENROUTER = "openrouter"
+    MISTRAL = "mistral"
 
 
 class AgentConfig(BaseSettings):
@@ -118,18 +119,21 @@ class AgentConfig(BaseSettings):
 
 def create_model_instance(config: AgentConfig):
     """
-    Create a PydanticAI model instance based on configuration.
+    Create a Strands model instance based on configuration.
+
+    Strands is model-agnostic and can route to different providers automatically
+    based on the model ID string, or we can configure specific providers.
 
     Args:
         config: Agent configuration
 
     Returns:
-        PydanticAI model instance
+        Strands model ID string or model instance
     """
-    if config.llm_provider == LLMProvider.AWS:
-        # Set AWS environment variables for the AWS SDK to use
-        import os
+    # Set environment variables for authentication
+    import os
 
+    if config.llm_provider == LLMProvider.AWS:
         if config.aws_access_key_id:
             os.environ["AWS_ACCESS_KEY_ID"] = config.aws_access_key_id
         if config.aws_secret_access_key:
@@ -137,76 +141,38 @@ def create_model_instance(config: AgentConfig):
         if config.aws_region:
             os.environ["AWS_DEFAULT_REGION"] = config.aws_region
 
-        from pydantic_ai.models.bedrock import BedrockConverseModel
-
-        return BedrockConverseModel(model_name=config.llm_choice)
-
     elif config.llm_provider == LLMProvider.OPENAI:
-        # Set OpenAI environment variables for the SDK
-        import os
-
         if config.llm_api_key:
             os.environ["OPENAI_API_KEY"] = config.llm_api_key
-        if config.llm_base_url:
-            os.environ["OPENAI_BASE_URL"] = config.llm_base_url
 
-        from pydantic_ai.models.openai import OpenAIModel
+        from strands.models.openai import OpenAIModel
 
-        return OpenAIModel(model_name=config.llm_choice)
+        return OpenAIModel(model_id=config.llm_choice, api_key=config.llm_api_key)
 
     elif config.llm_provider == LLMProvider.ANTHROPIC:
-        # Set Anthropic environment variables for the SDK
-        import os
-
         if config.llm_api_key:
             os.environ["ANTHROPIC_API_KEY"] = config.llm_api_key
-        if config.llm_base_url:
-            os.environ["ANTHROPIC_BASE_URL"] = config.llm_base_url
 
-        from pydantic_ai.models.anthropic import AnthropicModel
+        from strands.models.anthropic import AnthropicModel
 
-        return AnthropicModel(model_name=config.llm_choice)
+        return AnthropicModel(model_id=config.llm_choice, api_key=config.llm_api_key)
+
+    elif config.llm_provider == LLMProvider.MISTRAL:
+        if config.llm_api_key:
+            os.environ["MISTRAL_API_KEY"] = config.llm_api_key
+
+        from strands.models.mistral import MistralModel
+
+        return MistralModel(model_id=config.llm_choice, api_key=config.llm_api_key)
 
     elif config.llm_provider == LLMProvider.OLLAMA:
-        # For Ollama, use OpenAI model with custom base URL
-        from pydantic_ai.models.openai import OpenAIModel
-        from pydantic_ai.providers.openai import OpenAIProvider
+        from strands.models.ollama import OllamaModel
 
-        base_url = config.llm_base_url or "http://localhost:11434/v1"
-        return OpenAIModel(model_name=config.llm_choice, provider=OpenAIProvider(base_url=base_url))
+        base_url = config.llm_base_url or "http://localhost:11434"
+        return OllamaModel(model_id=config.llm_choice, base_url=base_url)
 
-    elif config.llm_provider == LLMProvider.OPENROUTER:
-        # For OpenRouter, use OpenAI model with OpenRouter provider
-        from pydantic_ai.models.openai import OpenAIModel
-        from pydantic_ai.providers.openrouter import OpenRouterProvider
-
-        if not config.llm_api_key:
-            raise ValueError("OpenRouter requires an API key")
-
-        return OpenAIModel(
-            model_name=config.llm_choice, provider=OpenRouterProvider(api_key=config.llm_api_key)
-        )
-
-    else:
-        raise ValueError(f"Unsupported LLM provider: {config.llm_provider}")
-
-
-def get_model_string(config: AgentConfig) -> str:
-    """
-    Get the model string for PydanticAI based on configuration.
-
-    Args:
-        config: Agent configuration
-
-    Returns:
-        Model string for PydanticAI
-    """
-    if config.llm_provider == LLMProvider.AWS:
-        return f"bedrock:{config.llm_choice}"
-    elif config.llm_provider == LLMProvider.OPENAI:
-        return f"openai:{config.llm_choice}"
-    else:
-        raise ValueError(f"Unsupported LLM provider: {config.llm_provider}")
+    # For AWS or unknown providers, return model ID string
+    return config.llm_choice
 
 
 def load_config() -> AgentConfig:

@@ -44,8 +44,8 @@ class TestObsidianTools:
     """Test suite for Obsidian native tools."""
 
     @pytest.fixture
-    def mock_deps(self, tmp_path):
-        """Create mock dependencies with temporary vault."""
+    def mock_vault_config(self, tmp_path):
+        """Create mock vault configuration for Strands tests."""
         # Create temporary vault structure
         vault_path = tmp_path / "test_vault"
         vault_path.mkdir()
@@ -72,37 +72,42 @@ This note has #hashtags and frontmatter tags.
         sub_dir.mkdir()
         (sub_dir / "project_note.md").write_text("# Project Note\n\nProject content.")
 
-        # Mock config
-        mock_config = Mock()
-        mock_config.obsidian_vault_path = str(vault_path)
+        # Set up temporary environment variable for vault path
+        import os
 
-        # Mock deps
-        mock_deps = Mock()
-        mock_deps.config = mock_config
+        original_path = os.environ.get("OBSIDIAN_VAULT_PATH")
+        os.environ["OBSIDIAN_VAULT_PATH"] = str(vault_path)
 
-        return mock_deps
+        yield vault_path
+
+        # Cleanup
+        if original_path:
+            os.environ["OBSIDIAN_VAULT_PATH"] = original_path
+        else:
+            os.environ.pop("OBSIDIAN_VAULT_PATH", None)
 
     @pytest.mark.asyncio
-    async def test_create_obsidian_note(self, mock_deps):
+    async def test_create_obsidian_note(self, mock_vault_config):
         """Test creating a new note."""
-        result = await create_obsidian_note(
-            mock_deps, "new_note", "# New Note\n\nThis is new content."
-        )
+        vault_path = mock_vault_config
+
+        result = await create_obsidian_note("new_note", "# New Note\n\nThis is new content.")
 
         assert "Note created successfully" in result
         assert "new_note.md" in result
 
         # Verify file was created
-        vault_path = Path(mock_deps.config.obsidian_vault_path)
+        # vault_path already available from fixture
         new_file = vault_path / "new_note.md"
         assert new_file.exists()
         assert "This is new content." in new_file.read_text()
 
     @pytest.mark.asyncio
-    async def test_create_note_with_folder(self, mock_deps):
+    async def test_create_note_with_folder(self, mock_vault_config):
         """Test creating a note in a subfolder."""
+        vault_path = mock_vault_config
+
         result = await create_obsidian_note(
-            mock_deps,
             "folder_note",
             "# Folder Note\n\nContent in folder.",
             folder="new_folder",
@@ -111,36 +116,37 @@ This note has #hashtags and frontmatter tags.
         assert "Note created successfully" in result
 
         # Verify file was created in correct location
-        vault_path = Path(mock_deps.config.obsidian_vault_path)
+        # vault_path already available from fixture
         new_file = vault_path / "new_folder" / "folder_note.md"
         assert new_file.exists()
 
     @pytest.mark.asyncio
-    async def test_create_duplicate_note_fails(self, mock_deps):
+    async def test_create_duplicate_note_fails(self, mock_vault_config):
         """Test that creating a duplicate note fails."""
         with pytest.raises(ValueError, match="Note already exists"):
-            await create_obsidian_note(mock_deps, "test_note", "Duplicate content")
+            await create_obsidian_note("test_note", "Duplicate content")
 
     @pytest.mark.asyncio
-    async def test_read_obsidian_note(self, mock_deps):
+    async def test_read_obsidian_note(self, mock_vault_config):
         """Test reading an existing note."""
-        result = await read_obsidian_note(mock_deps, "test_note")
+        result = await read_obsidian_note("test_note")
 
         assert "Test Note" in result
         assert "This is a test note." in result
         assert "File Info" in result
 
     @pytest.mark.asyncio
-    async def test_read_nonexistent_note_fails(self, mock_deps):
+    async def test_read_nonexistent_note_fails(self, mock_vault_config):
         """Test that reading a nonexistent note fails."""
         with pytest.raises(ValueError, match="Note not found"):
-            await read_obsidian_note(mock_deps, "nonexistent")
+            await read_obsidian_note("nonexistent")
 
     @pytest.mark.asyncio
-    async def test_edit_obsidian_note_replace(self, mock_deps):
+    async def test_edit_obsidian_note_replace(self, mock_vault_config):
         """Test editing a note with replace operation."""
+        vault_path = mock_vault_config
+
         result = await edit_obsidian_note(
-            mock_deps,
             "test_note",
             "# Updated Note\n\nThis is updated content.",
             operation="replace",
@@ -149,22 +155,22 @@ This note has #hashtags and frontmatter tags.
         assert "Note edited successfully (replace)" in result
 
         # Verify content was updated
-        vault_path = Path(mock_deps.config.obsidian_vault_path)
+        # vault_path already available from fixture
         note_file = vault_path / "test_note.md"
         content = note_file.read_text()
         assert "Updated Note" in content
         assert "updated content" in content
 
     @pytest.mark.asyncio
-    async def test_edit_obsidian_note_append(self, mock_deps):
+    async def test_edit_obsidian_note_append(self, mock_vault_config):
         """Test editing a note with append operation."""
+        vault_path = mock_vault_config
         original_content = "# Test Note\n\nOriginal content."
-        vault_path = Path(mock_deps.config.obsidian_vault_path)
         note_file = vault_path / "append_test.md"
         note_file.write_text(original_content)
 
         result = await edit_obsidian_note(
-            mock_deps, "append_test", "\n\nAppended content.", operation="append"
+            "append_test", "\n\nAppended content.", operation="append"
         )
 
         assert "Note edited successfully (append)" in result
@@ -175,55 +181,55 @@ This note has #hashtags and frontmatter tags.
         assert "Appended content." in content
 
     @pytest.mark.asyncio
-    async def test_delete_obsidian_note(self, mock_deps):
+    async def test_delete_obsidian_note(self, mock_vault_config):
         """Test deleting a note."""
+        vault_path = mock_vault_config
         # Create a note to delete
-        vault_path = Path(mock_deps.config.obsidian_vault_path)
         delete_file = vault_path / "to_delete.md"
         delete_file.write_text("# To Delete\n\nThis will be deleted.")
 
-        result = await delete_obsidian_note(mock_deps, "to_delete")
+        result = await delete_obsidian_note("to_delete")
 
         assert "Note deleted successfully" in result
         assert not delete_file.exists()
 
     @pytest.mark.asyncio
-    async def test_list_available_obsidian_vaults(self, mock_deps):
+    async def test_list_available_obsidian_vaults(self, mock_vault_config):
         """Test listing available vaults."""
-        result = await list_available_obsidian_vaults(mock_deps)
+        result = await list_available_obsidian_vaults()
 
         assert "Available Vaults" in result
         assert "test_vault" in result
         assert "notes" in result
 
     @pytest.mark.asyncio
-    async def test_search_obsidian_vault_content(self, mock_deps):
+    async def test_search_obsidian_vault_content(self, mock_vault_config):
         """Test content search functionality."""
-        result = await search_obsidian_vault(mock_deps, "test note", search_type="content")
+        result = await search_obsidian_vault("test note", search_type="content")
 
         assert "Search Results" in result
         assert "test_note.md" in result or "tagged_note.md" in result
 
     @pytest.mark.asyncio
-    async def test_search_obsidian_vault_filename(self, mock_deps):
+    async def test_search_obsidian_vault_filename(self, mock_vault_config):
         """Test filename search functionality."""
-        result = await search_obsidian_vault(mock_deps, "tagged", search_type="filename")
+        result = await search_obsidian_vault("tagged", search_type="filename")
 
         assert "Search Results" in result
         assert "tagged_note.md" in result
 
     @pytest.mark.asyncio
-    async def test_search_obsidian_vault_tags(self, mock_deps):
+    async def test_search_obsidian_vault_tags(self, mock_vault_config):
         """Test tag search functionality."""
-        result = await search_obsidian_vault(mock_deps, "ai", search_type="tag")
+        result = await search_obsidian_vault("ai", search_type="tag")
 
         assert "Search Results" in result
         assert "tagged_note.md" in result
 
     @pytest.mark.asyncio
-    async def test_get_obsidian_tags_list(self, mock_deps):
+    async def test_get_obsidian_tags_list(self, mock_vault_config):
         """Test getting tags list."""
-        result = await get_obsidian_tags_list(mock_deps)
+        result = await get_obsidian_tags_list()
 
         assert "All Tags in Vault" in result
         assert "#ai" in result
@@ -231,47 +237,47 @@ This note has #hashtags and frontmatter tags.
         assert "#hashtags" in result
 
     @pytest.mark.asyncio
-    async def test_add_obsidian_tags(self, mock_deps):
+    async def test_add_obsidian_tags(self, mock_vault_config):
         """Test adding tags to a note."""
-        result = await add_obsidian_tags(mock_deps, "test_note", ["python", "tutorial"])
+        result = await add_obsidian_tags("test_note", ["python", "tutorial"])
 
         assert "Tags added" in result
         assert "#python" in result
         assert "#tutorial" in result
 
         # Verify tags were added to file
-        vault_path = Path(mock_deps.config.obsidian_vault_path)
+        vault_path = mock_vault_config
         note_file = vault_path / "test_note.md"
         content = note_file.read_text()
         assert "python" in content
         assert "tutorial" in content
 
     @pytest.mark.asyncio
-    async def test_remove_obsidian_tags(self, mock_deps):
+    async def test_remove_obsidian_tags(self, mock_vault_config):
         """Test removing tags from a note."""
-        result = await remove_obsidian_tags(mock_deps, "tagged_note", ["ai"])
+        result = await remove_obsidian_tags("tagged_note", ["ai"])
 
         assert "Tags removed" in result
         assert "#ai" in result
 
         # Verify tag was removed
-        vault_path = Path(mock_deps.config.obsidian_vault_path)
+        vault_path = mock_vault_config
         note_file = vault_path / "tagged_note.md"
         content = note_file.read_text()
         # Should still have testing tag but not ai
         assert "testing" in content
 
     @pytest.mark.asyncio
-    async def test_rename_obsidian_tag(self, mock_deps):
+    async def test_rename_obsidian_tag(self, mock_vault_config):
         """Test renaming a tag across the vault."""
-        result = await rename_obsidian_tag(mock_deps, "testing", "qa")
+        result = await rename_obsidian_tag("testing", "qa")
 
         assert "Tag renamed" in result
         assert "testing" in result
         assert "qa" in result
 
         # Verify tag was renamed in file
-        vault_path = Path(mock_deps.config.obsidian_vault_path)
+        vault_path = mock_vault_config
         note_file = vault_path / "tagged_note.md"
         content = note_file.read_text()
         assert "qa" in content
@@ -337,7 +343,7 @@ class TestObsidianSecurity:
     """Test security and validation."""
 
     @pytest.fixture
-    def mock_deps_security(self, tmp_path):
+    def mock_vault_config_security(self, tmp_path):
         """Create mock deps for security testing."""
         vault_path = tmp_path / "secure_vault"
         vault_path.mkdir()
@@ -346,10 +352,10 @@ class TestObsidianSecurity:
         mock_config = Mock()
         mock_config.obsidian_vault_path = str(vault_path)
 
-        mock_deps = Mock()
-        mock_deps.config = mock_config
+        mock_vault_config = Mock()
+        mock_vault_config.config = mock_config
 
-        return mock_deps
+        return mock_vault_config
 
     def test_validate_vault_path_security(self, tmp_path):
         """Test path traversal protection."""
@@ -381,12 +387,10 @@ class TestObsidianSecurity:
         assert "etc" in str(result)
 
     @pytest.mark.asyncio
-    async def test_filename_validation(self, mock_deps_security):
+    async def test_filename_validation(self, mock_vault_config_security):
         """Test filename validation prevents path traversal."""
         with pytest.raises(ValueError, match="cannot contain path separators"):
-            await create_obsidian_note(
-                mock_deps_security, "../../../etc/passwd", "malicious content"
-            )
+            await create_obsidian_note("../../../etc/passwd", "malicious content")
 
 
 class TestPerformanceAndReliability:
@@ -417,15 +421,15 @@ Contains various keywords like performance, testing, benchmark.
 
         mock_config = Mock()
         mock_config.obsidian_vault_path = str(vault_path)
-        mock_deps = Mock()
-        mock_deps.config = mock_config
+        mock_vault_config = Mock()
+        mock_vault_config.config = mock_config
 
         # Test search performance
         import time
 
         start_time = time.time()
 
-        result = await search_obsidian_vault(mock_deps, "performance", search_type="content")
+        result = await search_obsidian_vault("performance", search_type="content")
 
         end_time = time.time()
         search_time = end_time - start_time
@@ -437,14 +441,13 @@ Contains various keywords like performance, testing, benchmark.
     @pytest.mark.asyncio
     async def test_error_handling(self, tmp_path):
         """Test error handling and graceful failures."""
-        # Create invalid mock deps
-        mock_config = Mock()
-        mock_config.obsidian_vault_path = "/nonexistent/path"
-        mock_deps = Mock()
-        mock_deps.config = mock_config
+        # Test with nonexistent vault path via environment variable
+        import os
+        from unittest.mock import patch
 
-        with pytest.raises(ValueError, match="does not exist"):
-            await create_obsidian_note(mock_deps, "vault", "test", "content")
+        with patch.dict(os.environ, {"OBSIDIAN_VAULT_PATH": "/nonexistent/path"}):
+            with pytest.raises(ValueError, match="does not exist"):
+                await create_obsidian_note("test", "content")
 
     @pytest.mark.asyncio
     async def test_unicode_and_special_characters(self, tmp_path):
@@ -454,24 +457,22 @@ Contains various keywords like performance, testing, benchmark.
         vault_path.mkdir()
         (vault_path / ".obsidian").mkdir()
 
-        mock_config = Mock()
-        mock_config.obsidian_vault_path = str(vault_path)
-        mock_deps = Mock()
-        mock_deps.config = mock_config
+        import os
+        from unittest.mock import patch
 
-        result = await create_obsidian_note(
-            mock_deps,
-            "unicode_test",
-            "# Unicode Test 🚀\n\nContent with émojis and spëcial characters: 测试",
-        )
+        with patch.dict(os.environ, {"OBSIDIAN_VAULT_PATH": str(vault_path)}):
+            result = await create_obsidian_note(
+                "unicode_test",
+                "# Unicode Test 🚀\n\nContent with émojis and spëcial characters: 测试",
+            )
 
-        assert "Note created successfully" in result
+            assert "Note created successfully" in result
 
-        # Verify unicode content is preserved
-        read_result = await read_obsidian_note(mock_deps, "unicode_test")
-        assert "🚀" in read_result
-        assert "émojis" in read_result
-        assert "测试" in read_result
+            # Verify unicode content is preserved
+            read_result = await read_obsidian_note("unicode_test")
+            assert "🚀" in read_result
+            assert "émojis" in read_result
+            assert "测试" in read_result
 
 
 if __name__ == "__main__":

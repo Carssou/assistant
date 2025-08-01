@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from config.settings import AgentConfig, LLMProvider, get_model_string, load_config
+from config.settings import AgentConfig, LLMProvider, create_model_instance, load_config
 
 
 class TestAgentConfig:
@@ -87,35 +87,48 @@ class TestAgentConfig:
                 AgentConfig(_env_file=None)
 
 
-class TestModelString:
-    """Test cases for get_model_string function."""
+class TestCreateModelInstance:
+    """Test cases for create_model_instance function."""
 
-    def test_aws_model_string(self):
-        """Test AWS Bedrock model string generation."""
+    def test_aws_model_instance(self):
+        """Test AWS Bedrock model instance creation."""
         with patch.dict(
             os.environ, {"LLM_PROVIDER": "aws", "LLM_CHOICE": "claude-3-5-sonnet"}, clear=True
         ):
             config = AgentConfig(_env_file=None)
-            model_string = get_model_string(config)
-            assert model_string == "bedrock:claude-3-5-sonnet"
+            model_instance = create_model_instance(config)
+            # For AWS, should return the model string for now
+            assert model_instance == "claude-3-5-sonnet"
 
-    def test_openai_model_string(self):
-        """Test OpenAI model string generation."""
-        with patch.dict(os.environ, {"LLM_PROVIDER": "openai", "LLM_CHOICE": "gpt-4o"}, clear=True):
+    def test_openai_model_instance(self):
+        """Test OpenAI model instance creation."""
+        with patch.dict(
+            os.environ,
+            {"LLM_PROVIDER": "openai", "LLM_CHOICE": "gpt-4o", "LLM_API_KEY": "test-key"},
+            clear=True,
+        ):
             config = AgentConfig(_env_file=None)
-            model_string = get_model_string(config)
-            assert model_string == "openai:gpt-4o"
+            model_instance = create_model_instance(config)
+            # Should return a Strands OpenAI model instance
+            assert hasattr(model_instance, "config")
+            assert model_instance.config["model_id"] == "gpt-4o"
 
-    def test_unsupported_provider(self):
-        """Test error handling for unsupported provider."""
-        # Use clean environment for this test
-        with patch.dict(os.environ, {"LLM_PROVIDER": "aws"}, clear=True):
+    def test_anthropic_model_instance(self):
+        """Test Anthropic model instance creation."""
+        with patch.dict(
+            os.environ,
+            {
+                "LLM_PROVIDER": "anthropic",
+                "LLM_CHOICE": "claude-3-sonnet",
+                "LLM_API_KEY": "test-key",
+            },
+            clear=True,
+        ):
             config = AgentConfig(_env_file=None)
-            # Manually set an invalid provider to test error handling
-            config.llm_provider = "invalid"
-
-            with pytest.raises(ValueError, match="Unsupported LLM provider"):
-                get_model_string(config)
+            model_instance = create_model_instance(config)
+            # Should return a Strands Anthropic model instance
+            assert hasattr(model_instance, "config")
+            assert model_instance.config["model_id"] == "claude-3-sonnet"
 
 
 class TestLoadConfig:

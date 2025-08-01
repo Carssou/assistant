@@ -1,14 +1,10 @@
 """
-PydanticAI agent - following the exact course pattern.
+Strands Agents productivity agent with native MCP integration.
 """
 
-from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
-import httpx
-from langfuse import Langfuse
-from pydantic_ai import Agent, RunContext
+from strands import Agent, tool
 
 from agent.prompts import get_system_prompt
 from agent.tools import (
@@ -16,35 +12,16 @@ from agent.tools import (
     take_region_screenshot_tool,
     take_screenshot_tool,
 )
-from config.settings import AgentConfig, create_model_instance, load_config
+from config.settings import create_model_instance, load_config
 from mcp_servers.configs import create_all_mcp_servers
-
-
-@dataclass
-class AgentDeps:
-    """Simple dependency container - exactly like the course example."""
-
-    config: AgentConfig
-    http_client: httpx.AsyncClient
-    langfuse_client: Langfuse | None
-    vault_path: Path | None
-
 
 # Load config
 config = load_config()
 
-# Create agent - exactly like the course
-agent = Agent(
-    create_model_instance(config),
-    system_prompt=get_system_prompt(),
-    deps_type=AgentDeps,
-    mcp_servers=create_all_mcp_servers(config),
-    retries=2,
-)
 
-
-@agent.tool
-async def take_screenshot(ctx: RunContext[AgentDeps], quality: int = 75) -> str | Any:
+# Vision tools
+@tool
+async def take_screenshot(quality: int = 75) -> str | Any:
     """Capture a screenshot of the entire screen for visual analysis.
 
     Use this tool when you need to see what's currently displayed on the user's screen.
@@ -61,20 +38,19 @@ async def take_screenshot(ctx: RunContext[AgentDeps], quality: int = 75) -> str 
     # Check if Nova model - use direct Bedrock API
     from utils.bedrock_vision import should_use_bedrock_direct
 
-    if should_use_bedrock_direct(ctx.deps.config):
+    if should_use_bedrock_direct(config):
         from utils.bedrock_vision import analyze_full_screenshot_with_bedrock
         from utils.screen_capture import take_screenshot as take_screenshot_direct
 
         image_bytes = take_screenshot_direct(quality)
-        analysis = await analyze_full_screenshot_with_bedrock(image_bytes, ctx.deps.config)
+        analysis = await analyze_full_screenshot_with_bedrock(image_bytes, config)
         return analysis
 
-    return await take_screenshot_tool(ctx.deps.config, quality)
+    return await take_screenshot_tool(config, quality)
 
 
-@agent.tool
+@tool
 async def take_region_screenshot(
-    ctx: RunContext[AgentDeps],
     x: int,
     y: int,
     width: int,
@@ -101,21 +77,21 @@ async def take_region_screenshot(
     # Check if Nova model - use direct Bedrock API
     from utils.bedrock_vision import should_use_bedrock_direct
 
-    if should_use_bedrock_direct(ctx.deps.config):
+    if should_use_bedrock_direct(config):
         from utils.bedrock_vision import analyze_region_screenshot_with_bedrock
         from utils.screen_capture import take_region_screenshot as take_region_screenshot_direct
 
         image_bytes = take_region_screenshot_direct(x, y, width, height, quality)
         analysis = await analyze_region_screenshot_with_bedrock(
-            image_bytes, x, y, width, height, ctx.deps.config
+            image_bytes, x, y, width, height, config
         )
         return analysis
 
-    return await take_region_screenshot_tool(x, y, width, height, quality)
+    return await take_region_screenshot_tool(config, x, y, width, height, quality)
 
 
-@agent.tool
-async def get_screen_info(ctx: RunContext[AgentDeps]) -> dict[str, Any]:
+@tool
+async def get_screen_info() -> dict[str, Any]:
     """Get technical information about the user's screen/display setup.
 
     Use this to understand screen dimensions, resolution, and display configuration.
@@ -128,10 +104,8 @@ async def get_screen_info(ctx: RunContext[AgentDeps]) -> dict[str, Any]:
 
 
 # Obsidian tools (native implementation)
-@agent.tool
-async def create_note(
-    ctx: RunContext[AgentDeps], filename: str, content: str, folder: str = None
-) -> str:
+@tool
+async def create_note(filename: str, content: str, folder: str = None) -> str:
     """Create a new markdown note in an Obsidian knowledge management vault.
 
     Use this to create new notes for storing information, ideas, or documentation.
@@ -146,11 +120,11 @@ async def create_note(
     """
     from tools.obsidian import create_obsidian_note
 
-    return await create_obsidian_note(ctx.deps, filename, content, folder)
+    return await create_obsidian_note(filename, content, folder)
 
 
-@agent.tool
-async def read_note(ctx: RunContext[AgentDeps], filename: str, folder: str = None) -> str:
+@tool
+async def read_note(filename: str, folder: str = None) -> str:
     """Read the markdown content of an existing Obsidian note.
 
     Use this to retrieve and view the contents of notes in the knowledge vault.
@@ -164,12 +138,11 @@ async def read_note(ctx: RunContext[AgentDeps], filename: str, folder: str = Non
     """
     from tools.obsidian import read_obsidian_note
 
-    return await read_obsidian_note(ctx.deps, filename, folder)
+    return await read_obsidian_note(filename, folder)
 
 
-@agent.tool
+@tool
 async def edit_note(
-    ctx: RunContext[AgentDeps],
     filename: str,
     content: str,
     folder: str = None,
@@ -190,11 +163,11 @@ async def edit_note(
     """
     from tools.obsidian import edit_obsidian_note
 
-    return await edit_obsidian_note(ctx.deps, filename, content, folder, operation)
+    return await edit_obsidian_note(filename, content, folder, operation)
 
 
-@agent.tool
-async def delete_note(ctx: RunContext[AgentDeps], filename: str, folder: str = None) -> str:
+@tool
+async def delete_note(filename: str, folder: str = None) -> str:
     """Permanently delete a note from the Obsidian vault.
 
     Use this to remove notes that are no longer needed. Creates backup before deletion.
@@ -208,13 +181,12 @@ async def delete_note(ctx: RunContext[AgentDeps], filename: str, folder: str = N
     """
     from tools.obsidian import delete_obsidian_note
 
-    return await delete_obsidian_note(ctx.deps, filename, folder)
+    return await delete_obsidian_note(filename, folder)
 
 
 # Advanced Obsidian tools (Phase 2)
-@agent.tool
+@tool
 async def search_vault(
-    ctx: RunContext[AgentDeps],
     query: str,
     search_type: str = "content",
     case_sensitive: bool = False,
@@ -237,11 +209,11 @@ async def search_vault(
     """
     from tools.obsidian import search_obsidian_vault
 
-    return await search_obsidian_vault(ctx.deps, query, search_type, case_sensitive, path, limit)
+    return await search_obsidian_vault(query, search_type, case_sensitive, path, limit)
 
 
-@agent.tool
-async def get_tags_list(ctx: RunContext[AgentDeps]) -> str:
+@tool
+async def get_tags_list() -> str:
     """List all tags used across notes in the Obsidian vault with usage statistics.
 
     Use this to understand the tag taxonomy and find popular topics in the knowledge base.
@@ -251,12 +223,11 @@ async def get_tags_list(ctx: RunContext[AgentDeps]) -> str:
     """
     from tools.obsidian import get_obsidian_tags_list
 
-    return await get_obsidian_tags_list(ctx.deps)
+    return await get_obsidian_tags_list()
 
 
-@agent.tool
+@tool
 async def add_tags(
-    ctx: RunContext[AgentDeps],
     filename: str,
     tags: list[str],
     folder: str = None,
@@ -275,12 +246,11 @@ async def add_tags(
     """
     from tools.obsidian import add_obsidian_tags
 
-    return await add_obsidian_tags(ctx.deps, filename, tags, folder)
+    return await add_obsidian_tags(filename, tags, folder)
 
 
-@agent.tool
+@tool
 async def remove_tags(
-    ctx: RunContext[AgentDeps],
     filename: str,
     tags: list[str],
     folder: str = None,
@@ -299,11 +269,11 @@ async def remove_tags(
     """
     from tools.obsidian import remove_obsidian_tags
 
-    return await remove_obsidian_tags(ctx.deps, filename, tags, folder)
+    return await remove_obsidian_tags(filename, tags, folder)
 
 
-@agent.tool
-async def rename_tag(ctx: RunContext[AgentDeps], old_tag: str, new_tag: str) -> str:
+@tool
+async def rename_tag(old_tag: str, new_tag: str) -> str:
     """Rename a tag across all notes in the Obsidian vault (bulk operation).
 
     Use this to standardize tag naming or fix typos across the entire knowledge base.
@@ -317,4 +287,117 @@ async def rename_tag(ctx: RunContext[AgentDeps], old_tag: str, new_tag: str) -> 
     """
     from tools.obsidian import rename_obsidian_tag
 
-    return await rename_obsidian_tag(ctx.deps, old_tag, new_tag)
+    return await rename_obsidian_tag(old_tag, new_tag)
+
+
+# Define native tools list
+native_tools = [
+    take_screenshot,
+    take_region_screenshot,
+    get_screen_info,
+    create_note,
+    read_note,
+    edit_note,
+    delete_note,
+    search_vault,
+    get_tags_list,
+    add_tags,
+    remove_tags,
+    rename_tag,
+]
+
+
+# MCP-aware agent manager for persistent sessions
+class MCPAgentManager:
+    """Manager for Strands agents with MCP support following proper context patterns."""
+
+    def __init__(self):
+        self.mcp_servers = create_all_mcp_servers(config)
+        self.native_agent = Agent(
+            model=create_model_instance(config),
+            system_prompt=get_system_prompt(),
+            tools=native_tools,
+        )
+        self._mcp_tools = None
+        self._discover_mcp_tools()
+        print(f"MCPAgentManager initialized with {len(self.mcp_servers)} MCP servers")
+
+    def _discover_mcp_tools(self):
+        """Discover MCP tools once and cache them."""
+        if not self.mcp_servers:
+            self._mcp_tools = []
+            return
+
+        self._mcp_tools = []
+        for mcp_client in self.mcp_servers:
+            try:
+                with mcp_client:
+                    mcp_tools = mcp_client.list_tools_sync()
+                    self._mcp_tools.extend(mcp_tools)
+            except Exception as e:
+                print(f"Warning: Failed to discover tools from MCP server: {e}")
+
+    def _create_mcp_agent(self):
+        """Create agent with all tools (native + MCP)."""
+        all_tools = native_tools.copy()
+        all_tools.extend(self._mcp_tools)
+
+        return Agent(
+            model=create_model_instance(config), system_prompt=get_system_prompt(), tools=all_tools
+        )
+
+    async def invoke_with_mcp(self, message: str) -> str:
+        """Invoke agent with proper MCP context management."""
+        if not self.mcp_servers:
+            return await self.native_agent.invoke_async(message)
+
+        # Enter all MCP contexts for this conversation
+        contexts = []
+        try:
+            for mcp_client in self.mcp_servers:
+                mcp_client.__enter__()
+                contexts.append(mcp_client)
+
+            # Create agent with cached tools
+            agent = self._create_mcp_agent()
+            return await agent.invoke_async(message)
+
+        finally:
+            for mcp_client in reversed(contexts):
+                try:
+                    mcp_client.__exit__(None, None, None)
+                except Exception as e:
+                    print(f"Warning: Error closing MCP client: {e}")
+
+    async def stream_with_mcp(self, message: str):
+        """Stream response from agent with proper MCP context management."""
+        if not self.mcp_servers:
+            async for chunk in self.native_agent.stream_async(message):
+                yield chunk
+            return
+
+        # Use MCP contexts but keep agent persistent for streaming
+        contexts = []
+        try:
+            for mcp_client in self.mcp_servers:
+                mcp_client.__enter__()
+                contexts.append(mcp_client)
+
+            # Use the persistent agent or create one
+            if not hasattr(self, "_mcp_agent") or self._mcp_agent is None:
+                self._mcp_agent = self._create_mcp_agent()
+
+            # Stream from the persistent agent
+            async for chunk in self._mcp_agent.stream_async(message):
+                yield chunk
+
+        finally:
+            for mcp_client in reversed(contexts):
+                try:
+                    mcp_client.__exit__(None, None, None)
+                except Exception as e:
+                    print(f"Warning: Error closing MCP client: {e}")
+
+
+# Create the global agent manager
+agent_manager = MCPAgentManager()

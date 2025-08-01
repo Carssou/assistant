@@ -5,16 +5,19 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "productivity-agent"
 version = "0.1.0"
-description = "PydanticAI-powered agent with integrated MCP servers for productivity tasks"
+description = "Strands Agents-powered productivity agent with native MCP integration and multi-agent capabilities"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "pydantic-ai[all]>=0.0.14",
-    "gradio>=5.9.1",
+    # Strands Agents framework
+    "strands>=0.1.0",
+    
+    # Modern interface
+    "streamlit>=1.30.0",
+    
+    # Core dependencies
     "httpx>=0.28.1",
     "python-dotenv>=1.0.1",
-    "langfuse>=2.54.4",
-    "pydantic>=2.10.3",
     "python-multipart>=0.0.12",
     "uvicorn[standard]>=0.32.1",
     "click>=8.0.0",
@@ -92,10 +95,9 @@ strict_equality = true
 
 [[tool.mypy.overrides]]
 module = [
-    "gradio.*",
+    "streamlit.*",
     "pyautogui.*",
-    "langfuse.*",
-    "pydantic_ai.*",
+    "strands.*",
 ]
 ignore_missing_imports = true
 
