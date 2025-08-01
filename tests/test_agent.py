@@ -10,7 +10,7 @@ import pytest
 
 # Try to import and catch any errors during module loading
 try:
-    from agent.agent import agent
+    from agent.agent import agent_manager
     from config.settings import AgentConfig
 
     IMPORT_SUCCESS = True
@@ -38,15 +38,17 @@ class TestAgent:
         if not IMPORT_SUCCESS:
             pytest.skip(f"Skipping due to import failure: {IMPORT_ERROR}")
 
-        assert agent is not None
+        assert agent_manager is not None
+        assert agent_manager.native_agent is not None
 
         # Debug info for CI
-        print(f"Agent type: {type(agent)}")
-        print(f"Agent model: {type(agent.model)}")
-        print(f"Has tool_names: {hasattr(agent, 'tool_names')}")
-        if hasattr(agent, "tool_names"):
-            print(f"Tools: {agent.tool_names}")
-        print(f"Agent attributes: {[a for a in dir(agent) if 'tool' in a.lower()]}")
+        print(f"Agent manager type: {type(agent_manager)}")
+        print(f"Native agent type: {type(agent_manager.native_agent)}")
+        print(f"Agent model: {type(agent_manager.native_agent.model)}")
+        print(f"Has tool_names: {hasattr(agent_manager.native_agent, 'tool_names')}")
+        if hasattr(agent_manager.native_agent, "tool_names"):
+            print(f"Tools: {agent_manager.native_agent.tool_names}")
+        print(f"Agent attributes: {[a for a in dir(agent_manager.native_agent) if 'tool' in a.lower()]}")
 
     def test_agent_has_tools(self):
         """Test that agent has tools registered."""
@@ -54,35 +56,35 @@ class TestAgent:
             pytest.skip(f"Skipping due to import failure: {IMPORT_ERROR}")
 
         # Check that agent has tools
-        assert hasattr(agent, "tool_names")
-        assert len(agent.tool_names) > 0
+        assert hasattr(agent_manager.native_agent, "tool_names")
+        assert len(agent_manager.native_agent.tool_names) > 0
 
         # Check that we have the expected tools
         expected_tools = ["take_screenshot", "create_note", "read_note"]
 
         for expected_tool in expected_tools:
-            assert expected_tool in agent.tool_names, f"Missing tool: {expected_tool}"
+            assert expected_tool in agent_manager.native_agent.tool_names, f"Missing tool: {expected_tool}"
 
     def test_take_screenshot_tool(self):
         """Test screenshot tool is registered."""
         if not IMPORT_SUCCESS:
             pytest.skip(f"Skipping due to import failure: {IMPORT_ERROR}")
 
-        assert "take_screenshot" in agent.tool_names
+        assert "take_screenshot" in agent_manager.native_agent.tool_names
 
     def test_take_region_screenshot_tool(self):
         """Test region screenshot tool is registered."""
         if not IMPORT_SUCCESS:
             pytest.skip(f"Skipping due to import failure: {IMPORT_ERROR}")
 
-        assert "take_region_screenshot" in agent.tool_names
+        assert "take_region_screenshot" in agent_manager.native_agent.tool_names
 
     def test_get_screen_info_tool(self):
         """Test screen info tool is registered."""
         if not IMPORT_SUCCESS:
             pytest.skip(f"Skipping due to import failure: {IMPORT_ERROR}")
 
-        assert "get_screen_info" in agent.tool_names
+        assert "get_screen_info" in agent_manager.native_agent.tool_names
 
 
 class TestAgentTools:

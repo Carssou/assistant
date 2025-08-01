@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import pytest_asyncio
 
-from agent.agent import agent
+from agent.agent import agent_manager
 from config.settings import AgentConfig
 
 
@@ -27,73 +27,73 @@ class TestMultiToolCoordination:
         with patch.dict(os.environ, {"LLM_PROVIDER": "aws"}, clear=True):
             config = AgentConfig(_env_file=None)
             config.obsidian_vault_path = None  # Disable vault validation
-            return agent
+            return agent_manager
 
     @pytest.mark.asyncio
     async def test_research_workflow_coordination(self, agent_setup):
         """Test research → note creation → task generation workflow."""
-        agent = agent_setup
+        agent_mgr = agent_setup
 
         # Mock the workflow execution
 
         # This would involve: searxng_web_search → create_note → todoist_create_task
         # In real test, we'd verify the agent makes these tool calls in sequence
-        assert agent is not None
-        assert hasattr(agent, "tool_names")
+        assert agent_mgr is not None
+        assert hasattr(agent_mgr.native_agent, "tool_names")
 
     @pytest.mark.asyncio
     async def test_video_learning_workflow(self, agent_setup):
         """Test video processing → study note creation workflow."""
-        agent = agent_setup
+        agent_mgr = agent_setup
 
         # Expected flow: get-video-info → create_note → todoist_create_task
-        assert agent is not None
-        assert hasattr(agent, "tool_names")
+        assert agent_mgr is not None
+        assert hasattr(agent_mgr.native_agent, "tool_names")
 
     @pytest.mark.asyncio
     async def test_information_synthesis_workflow(self, agent_setup):
         """Test multiple search → synthesis → organized notes."""
-        agent = agent_setup
+        agent_mgr = agent_setup
 
         # Expected: multiple searxng_web_search → web_url_read → create_note
-        assert agent is not None
-        assert hasattr(agent, "tool_names")
+        assert agent_mgr is not None
+        assert hasattr(agent_mgr.native_agent, "tool_names")
 
     @pytest.mark.asyncio
     async def test_content_curation_workflow(self, agent_setup):
         """Test search → read → organize → link workflow."""
-        agent = agent_setup
+        agent_mgr = agent_setup
 
         # Expected: searxng_web_search → web_url_read → search_vault → create_note → edit_note
-        assert agent is not None
-        assert hasattr(agent, "tool_names")
+        assert agent_mgr is not None
+        assert hasattr(agent_mgr.native_agent, "tool_names")
 
     @pytest.mark.asyncio
     async def test_error_handling_partial_failure(self, agent_setup):
         """Test coordination when one tool fails."""
-        agent = agent_setup
+        agent_mgr = agent_setup
 
         # Simulate scenario where search works but note creation fails
         # Agent should handle gracefully and provide partial results
 
-        assert agent is not None
-        assert hasattr(agent, "tool_names")
+        assert agent_mgr is not None
+        assert hasattr(agent_mgr.native_agent, "tool_names")
 
     @pytest.mark.asyncio
     async def test_server_unavailable_degradation(self, agent_setup):
         """Test graceful degradation when MCP server is unavailable."""
-        agent = agent_setup
+        agent_mgr = agent_setup
 
         # Simulate Todoist server being down
         # Agent should complete research and notes but skip task creation
 
-        assert agent is not None
-        assert hasattr(agent, "tool_names")
+        assert agent_mgr is not None
+        assert hasattr(agent_mgr.native_agent, "tool_names")
 
     @pytest.mark.asyncio
     async def test_concurrent_tool_usage(self, agent_setup):
         """Test performance with concurrent tool operations."""
-        agent = agent_setup
+        agent_mgr = agent_setup
 
         # Test multiple concurrent requests that use different tools
         queries = [
@@ -105,7 +105,7 @@ class TestMultiToolCoordination:
 
         # Would test concurrent execution performance
         assert len(queries) == 4
-        assert agent is not None
+        assert agent_mgr is not None
 
     def test_system_prompt_exists(self):
         """Test that system prompt is properly defined."""
@@ -187,12 +187,12 @@ class TestPerformanceMetrics:
         with patch.dict(os.environ, {"LLM_PROVIDER": "aws"}, clear=True):
             config = AgentConfig(_env_file=None)
             config.obsidian_vault_path = None  # Disable vault validation
-            return agent
+            return agent_manager
 
     @pytest.mark.asyncio
     async def test_response_time_acceptable(self, agent_setup):
         """Test that multi-tool workflows complete in reasonable time."""
-        agent = agent_setup
+        agent_mgr = agent_setup
 
         # Test that complex workflows don't take too long
         # Acceptable threshold might be 30-60 seconds for complex workflows
@@ -204,17 +204,17 @@ class TestPerformanceMetrics:
 
         duration = end_time - start_time
         assert duration < 60  # Should complete within 60 seconds
-        assert agent is not None
+        assert agent_mgr is not None
 
     @pytest.mark.asyncio
     async def test_memory_usage_reasonable(self, agent_setup):
         """Test that multi-tool coordination doesn't use excessive memory."""
-        agent = agent_setup
+        agent_mgr = agent_setup
 
         # Monitor memory usage during complex workflows
         # This would use memory profiling tools
-        assert agent is not None
-        assert hasattr(agent, "tool_names")
+        assert agent_mgr is not None
+        assert hasattr(agent_mgr.native_agent, "tool_names")
 
     def test_concurrent_request_handling(self):
         """Test handling multiple concurrent coordination requests."""
