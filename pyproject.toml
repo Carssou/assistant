@@ -10,7 +10,8 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     # Strands Agents framework
-    "strands>=0.1.0",
+    "strands-agents>=1.1.0",
+    "strands-agents-tools>=0.2.2",
     
     # Modern interface
     "streamlit>=1.30.0",
@@ -97,7 +98,7 @@ strict_equality = true
 module = [
     "streamlit.*",
     "pyautogui.*",
-    "strands.*",
+    "strands_agents.*",
 ]
 ignore_missing_imports = true
 
