@@ -66,72 +66,31 @@ class TestSetupLogging:
 
         assert log_file.exists()
 
-    @patch("utils.logger.Langfuse")
-    def test_langfuse_initialization_success(self, mock_langfuse):
-        """Test successful Langfuse initialization."""
+    def test_langfuse_removed(self):
+        """Test that Langfuse functionality has been removed."""
         logging.getLogger().handlers.clear()
 
-        mock_client = MagicMock()
-        mock_langfuse.return_value = mock_client
+        # Should work without Langfuse parameters
+        setup_logging()
 
-        langfuse_client = setup_logging(
-            langfuse_secret_key="test_secret", langfuse_public_key="test_public"
-        )
+        # Verify no Langfuse attribute exists
+        import utils.logger
 
-        mock_langfuse.assert_called_once_with(
-            secret_key="test_secret", public_key="test_public", host="https://cloud.langfuse.com"
-        )
-        assert langfuse_client == mock_client
+        assert not hasattr(utils.logger, "Langfuse")
 
-    @patch("utils.logger.Langfuse")
-    def test_langfuse_initialization_failure(self, mock_langfuse):
-        """Test Langfuse initialization failure handling."""
+    def test_basic_logging_functionality(self):
+        """Test that basic logging functionality works."""
         logging.getLogger().handlers.clear()
 
-        mock_langfuse.side_effect = Exception("Connection error")
+        # Should work with just basic parameters
+        setup_logging(log_level="DEBUG", debug_mode=True)
 
-        # Should not raise exception, just log warning
-        langfuse_client = setup_logging(
-            langfuse_secret_key="test_secret", langfuse_public_key="test_public"
-        )
+        # Should work without any parameters
+        setup_logging()
 
-        assert langfuse_client is None
-
-    def test_langfuse_custom_host(self):
-        """Test custom Langfuse host configuration."""
-        logging.getLogger().handlers.clear()
-
-        with patch("utils.logger.Langfuse") as mock_langfuse:
-            mock_client = MagicMock()
-            mock_langfuse.return_value = mock_client
-
-            setup_logging(
-                langfuse_secret_key="test_secret",
-                langfuse_public_key="test_public",
-                langfuse_host="https://custom.langfuse.com",
-            )
-
-            mock_langfuse.assert_called_once_with(
-                secret_key="test_secret",
-                public_key="test_public",
-                host="https://custom.langfuse.com",
-            )
-
-    def test_missing_langfuse_credentials(self):
-        """Test that missing credentials don't initialize Langfuse."""
-        logging.getLogger().handlers.clear()
-
-        # Only secret key
-        langfuse_client = setup_logging(langfuse_secret_key="test_secret")
-        assert langfuse_client is None
-
-        # Only public key
-        langfuse_client = setup_logging(langfuse_public_key="test_public")
-        assert langfuse_client is None
-
-        # Neither key
-        langfuse_client = setup_logging()
-        assert langfuse_client is None
+        # Logger should be configured
+        root_logger = logging.getLogger()
+        assert root_logger.level in [logging.INFO, logging.DEBUG]
 
 
 class TestGetLogger:
@@ -166,30 +125,25 @@ class TestSetupAgentLogging:
             result = setup_agent_logging(
                 log_level="DEBUG",
                 debug_mode=True,
-                langfuse_secret_key="secret",
-                langfuse_public_key="public",
-                langfuse_host="https://test.com",
             )
 
             mock_setup.assert_called_once_with(
                 log_level="DEBUG",
                 debug_mode=True,
-                langfuse_secret_key="secret",
-                langfuse_public_key="public",
-                langfuse_host="https://test.com",
             )
             assert result is None
 
-    def test_setup_agent_logging_returns_langfuse_client(self):
-        """Test that setup_agent_logging returns Langfuse client when available."""
+    def test_setup_agent_logging_basic_functionality(self):
+        """Test that setup_agent_logging works without Langfuse."""
         logging.getLogger().handlers.clear()
 
-        mock_client = MagicMock()
-        with patch("utils.logger.setup_logging") as mock_setup:
-            mock_setup.return_value = mock_client
+        # Should work without any parameters
+        result = setup_agent_logging()
+        assert result is None
 
-            result = setup_agent_logging()
-            assert result == mock_client
+        # Should work with basic parameters
+        result = setup_agent_logging(log_level="DEBUG", debug_mode=True)
+        assert result is None
 
 
 class TestLoggingIntegration:

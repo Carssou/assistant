@@ -112,9 +112,9 @@ class TestAgentTools:
             )
             result = await take_screenshot_tool(config, 75)
 
-            # Should return BinaryContent
-            assert hasattr(result, "data")
-            assert hasattr(result, "media_type")
+            # Should return base64 string
+            assert isinstance(result, str)
+            assert len(result) > 0
 
     @pytest.mark.asyncio
     async def test_region_screenshot_tool(self):
@@ -126,9 +126,9 @@ class TestAgentTools:
 
             result = await take_region_screenshot_tool(0, 0, 100, 100, 85)
 
-            # Should return BinaryContent
-            assert hasattr(result, "data")
-            assert hasattr(result, "media_type")
+            # Should return base64 string
+            assert isinstance(result, str)
+            assert len(result) > 0
 
     @pytest.mark.asyncio
     async def test_screen_info_tool(self):

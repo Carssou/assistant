@@ -11,8 +11,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from pydantic_ai import BinaryContent
-
+# Note: Strands agents use base64 encoded strings instead of BinaryContent
 # AgentDependencies is defined in agent.py - use Any for typing here
 from utils.screen_capture import (
     get_cursor_position,
@@ -60,7 +59,7 @@ def _save_screenshot(data_url: str, prefix: str = "screenshot") -> str:
         return ""
 
 
-async def take_screenshot_tool(config, quality: int = 75) -> BinaryContent:
+async def take_screenshot_tool(config, quality: int = 75) -> str:
     """
     Take a screenshot for analysis.
 
@@ -69,7 +68,7 @@ async def take_screenshot_tool(config, quality: int = 75) -> BinaryContent:
         quality: Image quality (1-100, default 75)
 
     Returns:
-        BinaryContent with the screenshot image
+        Base64 encoded string of the screenshot image
 
     Raises:
         RuntimeError: If screenshot capture fails
@@ -87,21 +86,20 @@ async def take_screenshot_tool(config, quality: int = 75) -> BinaryContent:
         image_bytes = take_screenshot(quality)
 
         # Save for user transparency (convert back to data URL for saving)
-        import base64
 
         encoded = base64.b64encode(image_bytes).decode("utf-8")
         data_url = f"data:image/jpeg;base64,{encoded}"
         _save_screenshot(data_url, "screenshot")
 
-        return BinaryContent(data=image_bytes, media_type="image/jpeg")
+        return base64.b64encode(image_bytes).decode("utf-8")
     except Exception as e:
-        # For errors, we can't return BinaryContent, so raise an exception
+        # For errors, raise an exception
         raise RuntimeError(f"Error taking screenshot: {str(e)}") from e
 
 
 async def take_region_screenshot_tool(
     x: int, y: int, width: int, height: int, quality: int = 85
-) -> BinaryContent:
+) -> str:
     """
     Take a screenshot of a specific screen region.
 
@@ -113,14 +111,14 @@ async def take_region_screenshot_tool(
         quality: Image quality (1-100, default 85)
 
     Returns:
-        BinaryContent with the region screenshot image
+        Base64 encoded string of the region screenshot image
 
     Raises:
         RuntimeError: If region screenshot capture fails
     """
     try:
         image_bytes = take_region_screenshot(x, y, width, height, quality)
-        return BinaryContent(data=image_bytes, media_type="image/jpeg")
+        return base64.b64encode(image_bytes).decode("utf-8")
     except Exception as e:
         raise RuntimeError(f"Error taking region screenshot: {str(e)}") from e
 
