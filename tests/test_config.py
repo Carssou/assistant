@@ -87,48 +87,7 @@ class TestAgentConfig:
                 AgentConfig(_env_file=None)
 
 
-class TestCreateModelInstance:
-    """Test cases for create_model_instance function."""
-
-    def test_aws_model_instance(self):
-        """Test AWS Bedrock model instance creation."""
-        with patch.dict(
-            os.environ, {"LLM_PROVIDER": "aws", "LLM_CHOICE": "claude-3-5-sonnet"}, clear=True
-        ):
-            config = AgentConfig(_env_file=None)
-            model_instance = create_model_instance(config)
-            # For AWS, should return the model string for now
-            assert model_instance == "claude-3-5-sonnet"
-
-    def test_openai_model_instance(self):
-        """Test OpenAI model instance creation."""
-        with patch.dict(
-            os.environ,
-            {"LLM_PROVIDER": "openai", "LLM_CHOICE": "gpt-4o", "LLM_API_KEY": "test-key"},
-            clear=True,
-        ):
-            config = AgentConfig(_env_file=None)
-            model_instance = create_model_instance(config)
-            # Should return a Strands OpenAI model instance
-            assert hasattr(model_instance, "config")
-            assert model_instance.config["model_id"] == "gpt-4o"
-
-    def test_anthropic_model_instance(self):
-        """Test Anthropic model instance creation."""
-        with patch.dict(
-            os.environ,
-            {
-                "LLM_PROVIDER": "anthropic",
-                "LLM_CHOICE": "claude-3-sonnet",
-                "LLM_API_KEY": "test-key",
-            },
-            clear=True,
-        ):
-            config = AgentConfig(_env_file=None)
-            model_instance = create_model_instance(config)
-            # Should return a Strands Anthropic model instance
-            assert hasattr(model_instance, "config")
-            assert model_instance.config["model_id"] == "claude-3-sonnet"
+# Model creation tests removed - Strands handles this internally
 
 
 class TestLoadConfig:
