@@ -65,9 +65,10 @@ class TestStreamlitGUI:
     @pytest.mark.asyncio
     async def test_get_streaming_response_success(self, mock_gui):
         """Test successful streaming response."""
+
         async def mock_stream():
             yield {"result": Mock(message={"content": [{"text": "Test response"}]})}
-        
+
         with patch.object(mock_gui.agent_manager, "stream_with_mcp", return_value=mock_stream()):
             responses = []
             async for response in mock_gui.get_streaming_response("Test message"):
@@ -78,7 +79,9 @@ class TestStreamlitGUI:
     @pytest.mark.asyncio
     async def test_get_streaming_response_error(self, mock_gui):
         """Test streaming response with error."""
-        with patch.object(mock_gui.agent_manager, "stream_with_mcp", side_effect=Exception("Agent error")):
+        with patch.object(
+            mock_gui.agent_manager, "stream_with_mcp", side_effect=Exception("Agent error")
+        ):
             responses = []
             async for response in mock_gui.get_streaming_response("Test message"):
                 responses.append(response)
@@ -153,10 +156,10 @@ class TestStreamlitGUI:
 
     # Note: Streamlit GUI doesn't have file upload or interface creation methods
     # These were part of the old Gradio implementation
-    
+
     def test_has_agent_manager(self, mock_gui):
         """Test that GUI has agent manager."""
-        assert hasattr(mock_gui, 'agent_manager')
+        assert hasattr(mock_gui, "agent_manager")
         assert mock_gui.agent_manager is not None
 
 
@@ -185,7 +188,9 @@ class TestStrandsGUIStreaming:
     @pytest.mark.asyncio
     async def test_get_streaming_response_error(self, mock_gui):
         """Test streaming response with error."""
-        with patch.object(mock_gui.agent_manager, "stream_with_mcp", side_effect=Exception("Stream error")):
+        with patch.object(
+            mock_gui.agent_manager, "stream_with_mcp", side_effect=Exception("Stream error")
+        ):
             responses = []
             async for response in mock_gui.get_streaming_response("Test message"):
                 responses.append(response)
@@ -201,16 +206,19 @@ class TestStrandsGUIMain:
     def test_main_function_exists(self):
         """Test that main function exists in streamlit_gui module."""
         from streamlit_gui import main
+
         assert callable(main)
 
     def test_initialize_session_state_function(self):
         """Test that initialize_session_state function exists."""
         from streamlit_gui import initialize_session_state
+
         assert callable(initialize_session_state)
 
     def test_load_configuration_function(self):
         """Test that load_configuration function exists."""
         from streamlit_gui import load_configuration
+
         assert callable(load_configuration)
 
 

@@ -48,7 +48,9 @@ class TestAgent:
         print(f"Has tool_names: {hasattr(agent_manager.native_agent, 'tool_names')}")
         if hasattr(agent_manager.native_agent, "tool_names"):
             print(f"Tools: {agent_manager.native_agent.tool_names}")
-        print(f"Agent attributes: {[a for a in dir(agent_manager.native_agent) if 'tool' in a.lower()]}")
+        print(
+            f"Agent attributes: {[a for a in dir(agent_manager.native_agent) if 'tool' in a.lower()]}"
+        )
 
     def test_agent_has_tools(self):
         """Test that agent has tools registered."""
@@ -63,7 +65,9 @@ class TestAgent:
         expected_tools = ["take_screenshot", "create_note", "read_note"]
 
         for expected_tool in expected_tools:
-            assert expected_tool in agent_manager.native_agent.tool_names, f"Missing tool: {expected_tool}"
+            assert (
+                expected_tool in agent_manager.native_agent.tool_names
+            ), f"Missing tool: {expected_tool}"
 
     def test_take_screenshot_tool(self):
         """Test screenshot tool is registered."""
