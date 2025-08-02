@@ -1,7 +1,7 @@
 """
-Unit tests for the PydanticAI Agent - following course pattern.
+Unit tests for the Strands Agent.
 
-Simple tests that match the course structure.
+Updated tests for Strands Agents framework.
 """
 
 from unittest.mock import MagicMock, patch
@@ -10,7 +10,7 @@ import pytest
 
 # Try to import and catch any errors during module loading
 try:
-    from agent.agent import AgentDeps, agent
+    from agent.agent import agent_manager
     from config.settings import AgentConfig
 
     IMPORT_SUCCESS = True
@@ -19,7 +19,6 @@ except Exception as e:
     IMPORT_SUCCESS = False
     IMPORT_ERROR = str(e)
     # Create dummy objects so tests can run
-    AgentDeps = None
     agent = None
     AgentConfig = None
 
@@ -39,70 +38,57 @@ class TestAgent:
         if not IMPORT_SUCCESS:
             pytest.skip(f"Skipping due to import failure: {IMPORT_ERROR}")
 
-        assert agent is not None
-        assert agent._deps_type == AgentDeps
+        assert agent_manager is not None
+        assert agent_manager.native_agent is not None
 
         # Debug info for CI
-        print(f"Agent type: {type(agent)}")
-        print(f"Agent model: {type(agent.model)}")
-        print(f"Has _function_tools: {hasattr(agent, '_function_tools')}")
-        if hasattr(agent, "_function_tools"):
-            print(f"Tools: {list(agent._function_tools.keys())}")
-        print(f"Agent attributes: {[a for a in dir(agent) if 'tool' in a.lower()]}")
+        print(f"Agent manager type: {type(agent_manager)}")
+        print(f"Native agent type: {type(agent_manager.native_agent)}")
+        print(f"Agent model: {type(agent_manager.native_agent.model)}")
+        print(f"Has tool_names: {hasattr(agent_manager.native_agent, 'tool_names')}")
+        if hasattr(agent_manager.native_agent, "tool_names"):
+            print(f"Tools: {agent_manager.native_agent.tool_names}")
+        print(
+            f"Agent attributes: {[a for a in dir(agent_manager.native_agent) if 'tool' in a.lower()]}"
+        )
 
-    def test_agent_deps_structure(self):
-        """Test that AgentDeps has the expected fields."""
+    def test_agent_has_tools(self):
+        """Test that agent has tools registered."""
         if not IMPORT_SUCCESS:
             pytest.skip(f"Skipping due to import failure: {IMPORT_ERROR}")
 
-        # Check the dataclass has the right fields
-        import dataclasses
+        # Check that agent has tools
+        assert hasattr(agent_manager.native_agent, "tool_names")
+        assert len(agent_manager.native_agent.tool_names) > 0
 
-        assert dataclasses.is_dataclass(AgentDeps)
+        # Check that we have the expected tools
+        expected_tools = ["take_screenshot", "create_note", "read_note"]
 
-        fields = {f.name for f in dataclasses.fields(AgentDeps)}
-        expected_fields = {"config", "http_client", "langfuse_client", "vault_path"}
-        assert fields == expected_fields
+        for expected_tool in expected_tools:
+            assert (
+                expected_tool in agent_manager.native_agent.tool_names
+            ), f"Missing tool: {expected_tool}"
 
     def test_take_screenshot_tool(self):
         """Test screenshot tool is registered."""
         if not IMPORT_SUCCESS:
             pytest.skip(f"Skipping due to import failure: {IMPORT_ERROR}")
 
-        # Check the tool exists by looking at registered functions
-        # First check if agent has the attribute (more robust than direct access)
-        if hasattr(agent, "_function_tools"):
-            tool_names = list(agent._function_tools.keys())
-            assert "take_screenshot" in tool_names
-        else:
-            # Alternative check: verify the tool decorator worked
-            assert hasattr(agent, "tool")
-            # Agent should be properly initialized
-            assert agent is not None
+        assert "take_screenshot" in agent_manager.native_agent.tool_names
 
     def test_take_region_screenshot_tool(self):
         """Test region screenshot tool is registered."""
         if not IMPORT_SUCCESS:
             pytest.skip(f"Skipping due to import failure: {IMPORT_ERROR}")
 
-        if hasattr(agent, "_function_tools"):
-            tool_names = list(agent._function_tools.keys())
-            assert "take_region_screenshot" in tool_names
-        else:
-            assert hasattr(agent, "tool")
-            assert agent is not None
+        assert "take_region_screenshot" in agent_manager.native_agent.tool_names
 
     def test_get_screen_info_tool(self):
         """Test screen info tool is registered."""
         if not IMPORT_SUCCESS:
             pytest.skip(f"Skipping due to import failure: {IMPORT_ERROR}")
 
-        if hasattr(agent, "_function_tools"):
-            tool_names = list(agent._function_tools.keys())
-            assert "get_screen_info" in tool_names
-        else:
-            assert hasattr(agent, "tool")
-            assert agent is not None
+        assert "get_screen_info" in agent_manager.native_agent.tool_names
 
 
 class TestAgentTools:
@@ -126,9 +112,9 @@ class TestAgentTools:
             )
             result = await take_screenshot_tool(config, 75)
 
-            # Should return BinaryContent
-            assert hasattr(result, "data")
-            assert hasattr(result, "media_type")
+            # Should return base64 string
+            assert isinstance(result, str)
+            assert len(result) > 0
 
     @pytest.mark.asyncio
     async def test_region_screenshot_tool(self):
@@ -140,9 +126,9 @@ class TestAgentTools:
 
             result = await take_region_screenshot_tool(0, 0, 100, 100, 85)
 
-            # Should return BinaryContent
-            assert hasattr(result, "data")
-            assert hasattr(result, "media_type")
+            # Should return base64 string
+            assert isinstance(result, str)
+            assert len(result) > 0
 
     @pytest.mark.asyncio
     async def test_screen_info_tool(self):

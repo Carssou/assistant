@@ -18,7 +18,6 @@ from .utils import (
 
 
 async def search_obsidian_vault(
-    deps,
     query: str,
     search_type: str = "content",
     case_sensitive: bool = False,
@@ -29,7 +28,6 @@ async def search_obsidian_vault(
     Search for content in Obsidian vault.
 
     Args:
-        deps: Agent dependencies
         query: Search query
         search_type: Type of search ("content", "filename", "tag")
         case_sensitive: Whether search is case sensitive
@@ -44,7 +42,7 @@ async def search_obsidian_vault(
     """
     try:
         # Get vault path
-        vault_path = get_vault_path(deps)
+        vault_path = get_vault_path()
 
         # Determine search directory
         search_dir = vault_path
@@ -283,12 +281,11 @@ def _format_single_result(result: SearchResult, index: int) -> str:
     return output
 
 
-async def get_obsidian_tags_list(deps) -> str:
+async def get_obsidian_tags_list() -> str:
     """
     Get all unique tags used in the vault.
 
     Args:
-        deps: Agent dependencies
         vault: Vault name
 
     Returns:
@@ -296,7 +293,7 @@ async def get_obsidian_tags_list(deps) -> str:
     """
     try:
         # Get vault path
-        vault_path = get_vault_path(deps)
+        vault_path = get_vault_path()
 
         # Get all markdown files
         md_files = await get_all_markdown_files(vault_path)

@@ -1,36 +1,27 @@
 """
-Logging configuration using Langfuse.
+Logging configuration for Strands Agents.
 
-This module provides centralized logging and observability configuration
-for the PydanticAI agent using Langfuse for tracing and monitoring.
+This module provides centralized logging configuration.
+Strands has its own observability system that will be configured later.
 """
 
 import logging
 import sys
 from pathlib import Path
 
-from langfuse import Langfuse
+# Langfuse removed - Strands has its own logging system
 
 
 def setup_logging(
     log_level: str = "INFO",
     debug_mode: bool = False,
-    langfuse_secret_key: str | None = None,
-    langfuse_public_key: str | None = None,
-    langfuse_host: str = "https://cloud.langfuse.com",
-) -> Langfuse | None:
+) -> None:
     """
-    Configure logging and Langfuse observability.
+    Configure basic logging.
 
     Args:
         log_level: Python logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         debug_mode: Enable debug mode for more verbose logging
-        langfuse_secret_key: Langfuse secret key for tracing
-        langfuse_public_key: Langfuse public key for tracing
-        langfuse_host: Langfuse host URL
-
-    Returns:
-        Langfuse client if credentials provided, None otherwise
     """
     # Set up Python logging
     if debug_mode:
@@ -61,16 +52,7 @@ def setup_logging(
     root_logger = logging.getLogger()
     root_logger.addHandler(file_handler)
 
-    # Initialize Langfuse if credentials provided
-    langfuse_client = None
-    if langfuse_secret_key and langfuse_public_key:
-        try:
-            langfuse_client = Langfuse(
-                secret_key=langfuse_secret_key, public_key=langfuse_public_key, host=langfuse_host
-            )
-            logging.info("Langfuse observability initialized")
-        except Exception as e:
-            logging.warning(f"Failed to initialize Langfuse: {e}")
+    # Langfuse removed - Strands has its own observability system
 
     # Enable HTTP request/response logging for API calls
     if debug_mode:
@@ -106,7 +88,7 @@ def setup_logging(
     if debug_mode:
         logging.debug("Debug mode enabled")
 
-    return langfuse_client
+    # No return value needed
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -125,30 +107,15 @@ def get_logger(name: str) -> logging.Logger:
 def setup_agent_logging(
     log_level: str = "INFO",
     debug_mode: bool = False,
-    langfuse_secret_key: str | None = None,
-    langfuse_public_key: str | None = None,
-    langfuse_host: str = "https://cloud.langfuse.com",
-) -> Langfuse | None:
+) -> None:
     """
     Set up logging specifically for the agent application.
 
     Args:
         log_level: Logging level
         debug_mode: Enable debug mode
-        langfuse_secret_key: Langfuse secret key
-        langfuse_public_key: Langfuse public key
-        langfuse_host: Langfuse host URL
-
-    Returns:
-        Langfuse client if available
     """
-    return setup_logging(
-        log_level=log_level,
-        debug_mode=debug_mode,
-        langfuse_secret_key=langfuse_secret_key,
-        langfuse_public_key=langfuse_public_key,
-        langfuse_host=langfuse_host,
-    )
+    setup_logging(log_level=log_level, debug_mode=debug_mode)
 
 
 # Export convenience functions

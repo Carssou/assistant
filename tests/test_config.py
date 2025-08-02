@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from config.settings import AgentConfig, LLMProvider, get_model_string, load_config
+from config.settings import AgentConfig, LLMProvider, create_model_instance, load_config
 
 
 class TestAgentConfig:
@@ -87,35 +87,7 @@ class TestAgentConfig:
                 AgentConfig(_env_file=None)
 
 
-class TestModelString:
-    """Test cases for get_model_string function."""
-
-    def test_aws_model_string(self):
-        """Test AWS Bedrock model string generation."""
-        with patch.dict(
-            os.environ, {"LLM_PROVIDER": "aws", "LLM_CHOICE": "claude-3-5-sonnet"}, clear=True
-        ):
-            config = AgentConfig(_env_file=None)
-            model_string = get_model_string(config)
-            assert model_string == "bedrock:claude-3-5-sonnet"
-
-    def test_openai_model_string(self):
-        """Test OpenAI model string generation."""
-        with patch.dict(os.environ, {"LLM_PROVIDER": "openai", "LLM_CHOICE": "gpt-4o"}, clear=True):
-            config = AgentConfig(_env_file=None)
-            model_string = get_model_string(config)
-            assert model_string == "openai:gpt-4o"
-
-    def test_unsupported_provider(self):
-        """Test error handling for unsupported provider."""
-        # Use clean environment for this test
-        with patch.dict(os.environ, {"LLM_PROVIDER": "aws"}, clear=True):
-            config = AgentConfig(_env_file=None)
-            # Manually set an invalid provider to test error handling
-            config.llm_provider = "invalid"
-
-            with pytest.raises(ValueError, match="Unsupported LLM provider"):
-                get_model_string(config)
+# Model creation tests removed - Strands handles this internally
 
 
 class TestLoadConfig:

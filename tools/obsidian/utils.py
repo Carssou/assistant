@@ -68,12 +68,12 @@ def safe_join_path(base: Path, *parts: str) -> Path:
     return result
 
 
-def get_vault_path(deps) -> Path:
+def get_vault_path(config=None) -> Path:
     """
     Get vault path from configuration.
 
     Args:
-        deps: Agent dependencies
+        config: Agent configuration (optional, will load if not provided)
 
     Returns:
         Path to the vault
@@ -81,10 +81,15 @@ def get_vault_path(deps) -> Path:
     Raises:
         ValueError: If vault not configured or doesn't exist
     """
-    if not deps.config.obsidian_vault_path:
+    if config is None:
+        from config.settings import load_config
+
+        config = load_config()
+
+    if not config.obsidian_vault_path:
         raise ValueError("No Obsidian vault configured")
 
-    vault_path = Path(deps.config.obsidian_vault_path)
+    vault_path = Path(config.obsidian_vault_path)
     if not vault_path.exists():
         raise ValueError(f"Vault path does not exist: {vault_path}")
 
